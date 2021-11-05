@@ -1,0 +1,185 @@
+// import { LevelData } from './common';
+import { Antigravity, BlackHole, Moon, Obstacle, Planet, Simulation, Station, VBody, Vector } from './data';
+import { BasicBind, checkForExhaustive, dropAllListeners, onKey, removeKeyListener, setView } from './main';
+import { View, LevelSelectBtn, BigButton, Button } from './menu';
+import { levels } from './levels';
+import { LevelObjectAICallback } from './types';
+import { LevelEditor } from './levelEditor';
+
+interface MainMenuState {
+    levelBtn: Button,
+    levelEditorBtn: Button
+};
+export const mainMenu = new View<MainMenuState>((ctx, state) => {
+    state.levelBtn = new BigButton(ctx, 'Play', () => {
+        setView(selectLevel);
+    });
+    state.levelEditorBtn = new BigButton(ctx, 'Level Editor', () => {
+        setView(LevelEditor);
+    });
+}, (ctx, mousePos, state) => {
+    const center = (ctx.canvas.width - BigButton.WIDTH) / 2;
+    ctx.fillStyle = 'white';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.font = `96px ubuntu, monospace`;
+    ctx.fillText('Gravity', ctx.canvas.width / 2, 320);
+    state.levelBtn.render(center, 420, mousePos);
+    state.levelEditorBtn.render(center, 520, mousePos);
+}, (ctx, state) => {
+    state.levelBtn.unbind();
+    state.levelEditorBtn.unbind();
+});
+
+let currentLevel: number;
+const w = LevelSelectBtn.HEIGHT + 15;
+const h = LevelSelectBtn.HEIGHT;
+interface SelectLevelState {
+    backBtn: Button,
+    buttons: Button[]
+};
+export const selectLevel = new View<SelectLevelState>((ctx, state) => {
+    state.backBtn = new BigButton(ctx, 'Back', () => {
+        setView(mainMenu);
+    });
+    state.buttons = [];
+    for(let i=0;i<levels.length;i++) {
+        state.buttons.push(new LevelSelectBtn(ctx, (i+1).toString(), () => {
+            currentLevel = i;
+            setView(playingGame);
+        }));
+    }
+}, (ctx, mousePos, state) => {
+    const center = ctx.canvas.width / 2;
+    const middle = ctx.canvas.height / 2;
+    const buttonLeftAlign = center - BigButton.WIDTH / 2;
+    for(let y=0;y<Math.ceil(state.buttons.length/5);y++) {
+        for(let x=0;x<Math.min(5, state.buttons.length - 5*y);x++) {
+            state.buttons[y*5+x].render(center - 2 * w - h / 2 + x * w, middle - 3 * w + y * w, mousePos);
+        }
+    }
+
+    state.backBtn.render(buttonLeftAlign, ctx.canvas.height - 100, mousePos);
+}, (ctx, state) => {
+    state.backBtn.unbind();
+    for(const btn of state.buttons) btn.unbind();
+});
+
+interface GameState {
+    simulation: Simulation,
+    done: boolean,
+    cache: any,
+    objectsWithAI: {
+        object: VBody,
+        tick: LevelObjectAICallback,
+        unbind: LevelObjectAICallback
+    }[],
+    continueBtn: Button,
+    continueKey: symbol,
+    continue: boolean,
+    restartBtn: Button,
+    restartKey: symbol
+}
+export const playingGame = new View<GameState>((ctx, state) => {
+    const simulation = new Simulation(ctx);
+    const level = levels[currentLevel];
+    simulation.camera = new Vector(-ctx.canvas.width / 2 + level.center.x, -ctx.canvas.height / 2 + level.center.y);
+    state.objectsWithAI = [];
+    state.cache = {};
+    const handleContinue = () => {
+        if(state.done) {
+            state.continue = true;
+            currentLevel++;
+            console.log(currentLevel, levels.length);
+            if(currentLevel < levels.length) {
+                setView(playingGame);
+            } else {
+                setView(mainMenu);
+            }
+        }
+    }
+    state.continueBtn = new BigButton(ctx, 'Continue', handleContinue);
+    state.continueBtn.enabled = false;
+    state.continueKey = Symbol('playingGame$continue');
+    onKey(state.continueKey, new BasicBind('Enter', {}, handleContinue));
+
+    const handleRestart = () => {
+        if(!state.done) {
+            setView(playingGame);
+        }
+    };
+    state.restartBtn = new LevelSelectBtn(ctx, String.fromCharCode(0x21ba), handleRestart);
+    state.restartKey = Symbol('playingGame$restartKey');
+    onKey(state.restartKey, new BasicBind('r', {}, handleRestart));
+
+    for(const entry of level.objects) {
+        let object: VBody;
+        switch(entry.type) {
+            case 'friendly-station':
+                object = new Station(entry.x, entry.y, true, simulation);
+                break;
+            case 'enemy-station':
+                object = new Station(entry.x, entry.y, false, simulation);
+                break;
+            case 'moon':
+                object = new Moon(entry.x, entry.y, simulation);
+                break;
+            case 'asteroid':
+                object = new Obstacle(entry.x, entry.y, simulation);
+                break;
+            case 'planet':
+                object = new Planet(entry.x, entry.y, simulation);
+                break;
+            case 'black-hole':
+                object = new BlackHole(entry.x, entry.y, simulation);
+                break;
+            case 'antigravity':
+                object = new Antigravity(entry.x, entry.y, simulation);
+                break;
+        }
+        simulation.addBody(object);
+        entry.aiInit?.(object as any, state.cache);
+        if(entry.aiTick) {
+            state.objectsWithAI.push({
+                object,
+                tick: entry.aiTick,
+                unbind: entry.aiUnbind
+            });
+        }
+    }
+    state.simulation = simulation;
+    state.done = false;
+}, (ctx, mousePos, state) => {
+    for(const entry of state.objectsWithAI) {
+        const object = entry.object;
+        // Not terribly flexible, but I've kind of backed myself into a hole
+        const isStation = object instanceof Station;
+        if((isStation && object.health > 0) || !isStation) entry.tick(object, state.cache);
+    }
+    if(!state.simulation.tick()) {
+        state.done = true;
+        state.continueBtn.enabled = true;
+    } else {
+        state.restartBtn.render(ctx.canvas.width - LevelSelectBtn.WIDTH - 15, ctx.canvas.height - LevelSelectBtn.HEIGHT - 15, mousePos);
+    }
+    if(state.done) {
+        ctx.font = '52px "Courier Prime", monospace';
+        ctx.textBaseline = 'bottom';
+        ctx.textAlign = 'center';
+        ctx.strokeStyle = 'black';
+        ctx.lineWidth = 4;
+        const center = ctx.canvas.width / 2;
+        const middle = ctx.canvas.height / 2;
+        const text = 'MISSION SUCCESSFUL';
+        ctx.strokeText(text, center, middle - 50);
+        ctx.fillText(text, center, middle - 50);
+        state.continueBtn.render(center - BigButton.WIDTH / 2, middle - BigButton.HEIGHT / 2 + 50, mousePos);   
+    }
+}, (ctx, state) => {
+    state.objectsWithAI.forEach(entry => void entry.unbind?.(entry.object, state.cache));
+    state.continueBtn.unbind();
+    state.restartBtn.unbind();
+    state.simulation.unbind();
+    removeKeyListener(state.continueKey);
+    removeKeyListener(state.restartKey);
+});
