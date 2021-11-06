@@ -14,6 +14,8 @@ export default async function(): Promise<ConfirmExit> {
 
         const parent = document.createElement('div');
         parent.className = 'widget center';
+        const content = document.createElement('div');
+        content.className = 'widget-content';
         const buttons = document.createElement('div');
         buttons.className = 'widget-btns';
 
@@ -37,8 +39,9 @@ export default async function(): Promise<ConfirmExit> {
         const text = document.createElement('div');
         text.className = 'widget-text';
         text.appendChild(document.createTextNode('Are you sure you want to exit?'));
-        parent.appendChild(text);
-        parent.appendChild(buttons);
+        content.appendChild(text);
+        content.appendChild(buttons);
+        parent.appendChild(content);
         body.appendChild(parent);
     });
 }

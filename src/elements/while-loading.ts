@@ -7,7 +7,8 @@ export default function(callback: AsyncFunction) {
     body.appendChild(blockingEl);
     loadingEl.style.display = 'initial';
     callback().then(() => {
+        console.log('done blocking');
         body.removeChild(blockingEl);
-        loadingEl.style.display = 'hide';
+        loadingEl.style.display = 'none';
     });
 }

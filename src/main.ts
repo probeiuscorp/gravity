@@ -203,3 +203,10 @@ function updateCanvases() {
     // const dy = (BACKGROUND.height - h) / 2;
     // bgCtx.drawImage(BACKGROUND, dx, dy, BACKGROUND.width - dx * 2, BACKGROUND.height - dy * 2, 0, 0, innerWidth, innerHeight);
 }
+
+export const colors = {
+    RED: '#f14c4c',
+    WARN: '#ffc107',
+    INFO: '#17a2b8',
+    SUCCESS: '#28a745'
+}

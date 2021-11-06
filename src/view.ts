@@ -1,10 +1,10 @@
 // import { LevelData } from './common';
 import { Antigravity, BlackHole, Moon, Obstacle, Planet, Simulation, Station, VBody, Vector } from './data';
-import { BasicBind, checkForExhaustive, dropAllListeners, onKey, removeKeyListener, setView } from './main';
+import { BasicBind, onKey, removeKeyListener, setView } from './main';
 import { View, LevelSelectBtn, BigButton, Button } from './menu';
 import { levels } from './levels';
 import { LevelObjectAICallback } from './types';
-import { LevelEditor } from './levelEditor';
+import { LevelEditor } from './level-editor';
 
 interface MainMenuState {
     levelBtn: Button,

@@ -8,6 +8,7 @@ import confirmExit, { ConfirmExit } from './elements/confirm-exit';
 import whileLoading from './elements/while-loading';
 import { PostLevel, PostLevelResponse } from './common';
 import form from './elements/form';
+import genericStatus, { Status } from './elements/generic-status';
 
 const container = document.getElementById('container');
 
@@ -63,11 +64,6 @@ export const LevelEditor = new View<LevelEditorState>((ctx, state) => {
         });
     }
     function newProject() {
-        form('Name?').then((text) => {
-            console.log(text);
-        }).catch(() => {
-            console.log('cancelled!');
-        });
     }
     function test() {
 
@@ -76,17 +72,33 @@ export const LevelEditor = new View<LevelEditorState>((ctx, state) => {
         
     }
     function publish() {
-        whileLoading(async () => {
-            return new Promise(async (resolve) => {
-                fetch('/publish-level', {
-                    method: 'POST',
-                    body: JSON.stringify({
-                        name: '',
-                        code: state.editor.getValue()
-                    } as PostLevel)
+        console.log(state.editor);
+        form('Level name:').then((name) => {
+            whileLoading(async () => {
+                return new Promise(async (doneLoading) => {
+                    fetch('/publish-level', {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            name,
+                            code: state.editor.getValue()
+                        } as PostLevel),
+                        headers: {
+                            'Content-Type': 'application/json' // because including charset seems to blow everything up
+                        }
+                    }).then((res) => res.json()).then((json: PostLevelResponse) => {
+                        doneLoading();
+                        if(json.error) {
+                            genericStatus(`Server refused: ${json.error}`, Status.ERROR);
+                        } else {
+                            genericStatus('Level published succesfully.', Status.SUCCESS);
+                        }
+                    }).catch(() => {
+                        doneLoading();
+                        genericStatus('Unexpected error enountered while publishing level.', Status.ERROR);
+                    });
                 });
             });
-        });
+        }).catch(() => {});
     }
 
     state.editor.addAction({
