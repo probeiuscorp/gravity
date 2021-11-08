@@ -1,28 +1,32 @@
 import * as mongoose from 'mongoose';
+import chalk = require('chalk');
+import { CHECK, X } from './server';
 
 let connectionCallbacks: ((wasSuccessful: boolean) => void)[] = [];
-// mongoose.connect(process.env.MONGODB_URI, {
-//     auth: {
-//         username: 'gravity',
-//         password: process.env.DATABASE_PSWD
-//     }
-// }).then(() => {
-//     connectionCallbacks.forEach((callback) => void callback(true));
-// }).catch(() => {
-//     connectionCallbacks.forEach((callback) => void callback(false));
-// });
+mongoose.connect(process.env.MONGODB_URI, {
+    auth: {
+        username: 'gravity',
+        password: process.env.DATABASE_PSWD
+    },
+    w: 'majority',
+    retryWrites: true
+}).then(() => {
+    console.log(chalk.greenBright(CHECK + ' mongo connected succesfully'));
+    connectionCallbacks.forEach((callback) => void callback(true));
+}).catch(() => {
+    connectionCallbacks.forEach((callback) => void callback(false));
+});
 
 export async function onConnectionFinished(): Promise<void> {
     return new Promise((resolve, reject) => {
-        resolve();
-        // connectionCallbacks.push((wasSuccessful) => {
-        //     wasSuccessful ? resolve() : reject();
-        // });
+        connectionCallbacks.push((wasSuccessful) => {
+            wasSuccessful ? resolve() : reject();
+        });
     });
 }
 
 mongoose.connection.on('error', () => {
-    console.log(`Error with Mongo connection!`);
+    console.log(chalk.redBright(X + ' error connecting to mongo'));
 });
 
 interface ILevelSchema {
@@ -32,7 +36,10 @@ interface ILevelSchema {
     levelData: string,
     source: string,
     public: string,
-    private: string
+    private: string,
+    rating: number,
+    ratings: number,
+    played: number
 }
 const LevelSchema = new mongoose.Schema<ILevelSchema>({
     name: {
@@ -55,6 +62,15 @@ const LevelSchema = new mongoose.Schema<ILevelSchema>({
     },
     private: {
         type: String
+    },
+    rating: {
+        type: Number
+    },
+    ratings: {
+        type: Number
+    },
+    played: {
+        type: Number
     }
 });
 

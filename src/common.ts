@@ -12,9 +12,11 @@ export type PostLevelResponse = {
 
 export type FetchLevelsResponse = {
     name: string,
+    id: number,
     official: boolean,
     jsCode: string,
-    source: string
+    source: string,
+    rating: number
 }[]
 
 export interface UpdateLevel {

@@ -68,10 +68,25 @@ saferCtx.gravity = {
     Station: Object.freeze(Station)
 };
 
-function executeSafer(ctx: any, code): void {
-    (window as any).__GRAVITY.evalNoStrict(`with(ctx){${code}}`, {
-        ctx
-    });
+function runFuncSafe(func: () => void, ctx: any): void {
+    if(func instanceof Function) {
+        func.bind(ctx)();
+        // if(func.toString().startsWith('() =>')) {
+        //     // arrow function, don't bind
+        //     // const me = Symbol();
+        //     // // (window as any).__GRAVITY.executeInWith(ctx, func);
+        //     // ctx[me] = {
+        //     //     assign: function() { this.func = func; }
+        //     // }
+        //     // ctx[me].assign();
+        //     // ctx[me].func();
+        //     // delete ctx[me];
+        //     func();
+        // } else {
+        //     // normal function, bind
+        //     func.bind(ctx)(); /* otherwise arrow functions can't be bound */
+        // }
+    }
 }
 
 /**
@@ -93,15 +108,15 @@ export default function saferLevel(code: string, testing: boolean): LevelData | 
             }
         },
 
-        setTimeout: ((func: Function, ms: number, ...args: any[]) => {
-            timeouts[window.setTimeout(func, ms, ...args)] = true;
+        setTimeout: ((func: () => void, ms: number, ...args: any[]) => {
+            timeouts[window.setTimeout(() => void runFuncSafe(func, ctx), ms, ...args)] = true;
         }).bind(window),
         clearTimeout: ((handle: number) => {
             delete timeouts[handle];
             window.clearTimeout(handle);
         }).bind(window),
-        setInterval: ((func: Function, ms: number, ...args: any[]) => {
-            intervals[window.setInterval(() => {executeSafer(ctx, func)}, ms, ...args)] = true;
+        setInterval: ((func: () => void, ms: number, ...args: any[]) => {
+            intervals[window.setInterval(() => void runFuncSafe(func, ctx), ms, ...args)] = true;
         }).bind(window),
         clearInterval: ((handle: number) => {
             delete intervals[handle];
@@ -110,10 +125,13 @@ export default function saferLevel(code: string, testing: boolean): LevelData | 
     }
 
     try {
-        executeSafer(ctx, code);
+        (window as any).__GRAVITY.evalNoStrict(`with(ctx){(function(){${code}}).bind(ctx)()}`, {
+            ctx
+        });
     } catch(e) {
         if(testing) {
-            console.log(e);
+            console.log('js code run:', code);
+            console.log('error encountered:', e.name + ': ' + e.message);
             genericStatus(['Error encountered while loading level.', 'See console for details.'], Status.ERROR);
         } else {
             genericStatus(['Error encountered while loading level.'], Status.ERROR);

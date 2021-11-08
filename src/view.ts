@@ -99,7 +99,10 @@ interface GameState {
     continueKey: symbol,
     continue: boolean,
     restartBtn: Button,
-    restartKey: symbol
+    restartKey: symbol,
+    restartBtnEnd: Button,
+    backBtn: Button,
+    backKey: symbol
 }
 export const playingGame = new View<GameState, GameOpts>((ctx, state, opts) => {
     const simulation = new Simulation(ctx);
@@ -118,6 +121,13 @@ export const playingGame = new View<GameState, GameOpts>((ctx, state, opts) => {
     state.continueKey = Symbol('playingGame$continue');
     onKey(state.continueKey, new BasicBind('Enter', {}, handleContinue));
 
+    const handleBack = () => {
+        opts.whenDone(false);
+    }
+    state.backBtn = new LevelSelectBtn(ctx, String.fromCharCode(0x232b), handleBack);
+    state.backKey = Symbol('playingGame$backKey');
+    onKey(state.backKey, new BasicBind('Backspace', {}, handleBack));
+
     const handleRestart = () => {
         if(!state.done) {
             setView(playingGame, opts);
@@ -125,6 +135,8 @@ export const playingGame = new View<GameState, GameOpts>((ctx, state, opts) => {
     };
     state.restartBtn = new LevelSelectBtn(ctx, String.fromCharCode(0x21ba), handleRestart);
     state.restartKey = Symbol('playingGame$restartKey');
+    state.restartBtnEnd = new BigButton(ctx, 'Restart', handleRestart);
+    state.restartBtnEnd.enabled = false;
     onKey(state.restartKey, new BasicBind('r', {}, handleRestart));
 
     for(const entry of level.objects) {
@@ -169,8 +181,10 @@ export const playingGame = new View<GameState, GameOpts>((ctx, state, opts) => {
     if(!state.simulation.tick()) {
         state.done = true;
         state.continueBtn.enabled = true;
+        state.restartBtnEnd.enabled = true;
     } else {
         state.restartBtn.render(ctx.canvas.width - LevelSelectBtn.WIDTH - 15, ctx.canvas.height - LevelSelectBtn.HEIGHT - 15, mousePos);
+        state.backBtn.render(ctx.canvas.width - LevelSelectBtn.WIDTH - 15, ctx.canvas.height - LevelSelectBtn.HEIGHT - 100, mousePos);
     }
     if(state.done) {
         ctx.font = '52px "Courier Prime", monospace';
@@ -183,13 +197,17 @@ export const playingGame = new View<GameState, GameOpts>((ctx, state, opts) => {
         const text = 'MISSION SUCCESSFUL';
         ctx.strokeText(text, center, middle - 50);
         ctx.fillText(text, center, middle - 50);
-        state.continueBtn.render(center - BigButton.WIDTH / 2, middle - BigButton.HEIGHT / 2 + 50, mousePos);   
+        state.continueBtn.render(center - BigButton.WIDTH / 2, middle - BigButton.HEIGHT / 2 + 50, mousePos);
+        state.restartBtnEnd.render(center - BigButton.WIDTH / 2, middle - BigButton.HEIGHT / 2 + 150, mousePos);
     }
 }, (ctx, state) => {
     
     state.continueBtn.unbind();
     state.restartBtn.unbind();
     state.simulation.unbind();
+    state.backBtn.unbind();
+    state.restartBtnEnd.unbind();
     removeKeyListener(state.continueKey);
     removeKeyListener(state.restartKey);
+    removeKeyListener(state.backKey);
 });
