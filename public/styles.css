@@ -75,8 +75,8 @@ canvas {
     justify-content: center;
     vertical-align: middle;
     font-size: 48px;
-    margin-right: 12px;
     color: white;
+    margin: auto 18px auto 0;
 }
 
 .widget-content {

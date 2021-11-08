@@ -88,22 +88,22 @@ export const LevelSelectBtn = makeButtonType(Resources.ALT_BTN, [
     Resources.ALT_BTN_HOVER_2
 ], 24);
 
-export type SetupCallback<T> = (ctx: CanvasRenderingContext2D, state: Partial<T>) => void;
+export type SetupCallback<T, Options extends object> = (ctx: CanvasRenderingContext2D, state: Partial<T>, opts: Options) => void;
 export type RenderCallback<T> = (ctx: CanvasRenderingContext2D, mousePos: Vector, state: Partial<T>) => void;
 export type UnbindCallback<T> = (ctx: CanvasRenderingContext2D, state: Partial<T>) => void;
-export class View<T extends object> {
-    private setup: SetupCallback<Partial<T>>;
+export class View<T extends object, Options extends object = {}> {
+    private setup: SetupCallback<Partial<T>, Options>;
     private paint: RenderCallback<T>;
     private unbind: UnbindCallback<Partial<T>>;
-    constructor(setup: SetupCallback<T>, paint: RenderCallback<T>, unbind: UnbindCallback<T>) {
+    constructor(setup: SetupCallback<T, Options>, paint: RenderCallback<T>, unbind: UnbindCallback<T>) {
         this.setup = setup;
         this.paint = paint;
         this.unbind = unbind;
     }
 
-    public bind(ctx: CanvasRenderingContext2D) {
+    public bind(ctx: CanvasRenderingContext2D, options: Options) {
         let state = {};
-        this.setup(ctx, state);
+        this.setup(ctx, state, options);
         return new BoundView<T>(state, this.unbind, this.paint, ctx);
     }
 }

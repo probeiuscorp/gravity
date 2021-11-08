@@ -4,8 +4,9 @@
         "target": "ES2018",
         "moduleResolution": "node",
         "removeComments": true,
-        // "sourceMap": true,
+        "sourceMap": true,
         "module": "ESNext",
-        "lib": ["DOM"]
+        "lib": ["DOM"],
+        "alwaysStrict": false
     }
 }

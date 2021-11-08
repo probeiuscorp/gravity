@@ -85,3 +85,17 @@ app.post('/publish-level', (req, res) => {
     //     });
     // });
 });
+
+app.post('/transpile', (req, res) => {
+    const body = req.body as { code: string };
+    try {
+        if(typeof body === 'object' && typeof body.code === 'string') {
+            const transpiled = typescript.transpile(body.code);
+            res.send(transpiled);
+        } else {
+            res.sendStatus(400);
+        }
+    } catch(e) {
+        res.sendStatus(400);
+    }
+});

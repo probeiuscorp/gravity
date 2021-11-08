@@ -1,14 +1,15 @@
 import * as monaco from 'monaco-editor';
 import { View } from './menu';
 import { body, disableRendering, enableRendering, setView } from './main';
-import types from './levelEditorTypes';
-import { mainMenu } from './view';
+import types from './level-editor-types';
+import { mainMenu, playingGame } from './view';
 import btn from './elements/create-btn';
 import confirmExit, { ConfirmExit } from './elements/confirm-exit';
 import whileLoading from './elements/while-loading';
 import { PostLevel, PostLevelResponse } from './common';
 import form from './elements/form';
 import genericStatus, { Status } from './elements/generic-status';
+import saferLevel from './safer-level';
 
 const container = document.getElementById('container');
 
@@ -17,7 +18,7 @@ const defaultText =
 
 }
 
-Gravity.registerLevel<LevelState>({
+Gravity.createLevel<LevelState>({
     center: {
         x: 0,
         y: 0
@@ -34,15 +35,15 @@ export interface LevelEditorState {
     editor: monaco.editor.IStandaloneCodeEditor,
     overlayEl: HTMLElement,
 }
-export const LevelEditor = new View<LevelEditorState>((ctx, state) => {
+export const LevelEditor = new View<LevelEditorState, { code?: string }>((ctx, state, opts) => {
     state.editor = monaco.editor.create(container, {
         language: 'typescript',
         theme: 'vs-dark',
-        value: defaultText,
+        value: opts.code ?? defaultText,
         lineDecorationsWidth: 10,
         tabSize: 4,
         lineNumbers: 'on',
-        padding: {
+        padding: opts.code ? undefined : {
             bottom: 10,
             top: 10
         }
@@ -59,14 +60,38 @@ export const LevelEditor = new View<LevelEditorState>((ctx, state) => {
                     save();
                 }
                 enableRendering();
-                setView(mainMenu);
+                setView(mainMenu, {});
             }
         });
     }
     function newProject() {
     }
     function test() {
-
+        const sourceCode = state.editor.getValue();
+        whileLoading<string>((done) => {
+            fetch('/transpile', {
+                method: 'POST',
+                body: JSON.stringify({ code: sourceCode }),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }).then((res) => res.text()).then((code) => {
+                done(code);
+            });
+        }).then((code) => {
+            const levelData = saferLevel(code, true);
+            if(levelData) {
+                enableRendering();
+                setView(playingGame, {
+                    level: levelData,
+                    whenDone: () => {
+                        setView(LevelEditor, {
+                            code: sourceCode
+                        });
+                    }
+                });
+            }
+        });
     }
     function save() {
         
@@ -74,28 +99,26 @@ export const LevelEditor = new View<LevelEditorState>((ctx, state) => {
     function publish() {
         console.log(state.editor);
         form('Level name:').then((name) => {
-            whileLoading(async () => {
-                return new Promise(async (doneLoading) => {
-                    fetch('/publish-level', {
-                        method: 'POST',
-                        body: JSON.stringify({
-                            name,
-                            code: state.editor.getValue()
-                        } as PostLevel),
-                        headers: {
-                            'Content-Type': 'application/json' // because including charset seems to blow everything up
-                        }
-                    }).then((res) => res.json()).then((json: PostLevelResponse) => {
-                        doneLoading();
-                        if(json.error) {
-                            genericStatus(`Server refused: ${json.error}`, Status.ERROR);
-                        } else {
-                            genericStatus('Level published succesfully.', Status.SUCCESS);
-                        }
-                    }).catch(() => {
-                        doneLoading();
-                        genericStatus('Unexpected error enountered while publishing level.', Status.ERROR);
-                    });
+            whileLoading((done) => {
+                fetch('/publish-level', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        name,
+                        code: state.editor.getValue()
+                    } as PostLevel),
+                    headers: {
+                        'Content-Type': 'application/json' // because including charset seems to blow everything up
+                    }
+                }).then((res) => res.json()).then((json: PostLevelResponse) => {
+                    done();
+                    if(json.error) {
+                        genericStatus([`Server refused: ${json.error}`], Status.ERROR);
+                    } else {
+                        genericStatus(['Level published succesfully.'], Status.SUCCESS);
+                    }
+                }).catch(() => {
+                    done();
+                    genericStatus(['Unexpected error enountered while publishing level.'], Status.ERROR);
                 });
             });
         }).catch(() => {});

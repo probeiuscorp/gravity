@@ -83,11 +83,11 @@ export function setCursor(_cursor: string) {
     cursor = _cursor;
 }
 
-let view = mainMenu.bind(ctx);
+let view = mainMenu.bind(ctx, {});
 
-export function setView(newView: View<any>) {
+export function setView<T extends object>(newView: View<any, T>, options: T) {
     view.unbind();
-    view = newView.bind(ctx);
+    view = newView.bind(ctx, options);
 }
 
 canvas.addEventListener('contextmenu', (e) => e.preventDefault());
@@ -168,12 +168,19 @@ body.classList.add('loaded');
 updateCanvases();
 paint();
 
+let isRendering = true;
 export function disableRendering() {
-    clearInterval(renderer);
+    if(isRendering) {
+        isRendering = false;
+        clearInterval(renderer);
+    }
 }
 
 export function enableRendering() {
-    renderer = setInterval(paint, 1e3 / 25);
+    if(!isRendering) {
+        isRendering = true;
+        renderer = setInterval(paint, 1e3 / 25);
+    }
 }
 
 window.addEventListener('resize', () => {

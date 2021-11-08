@@ -7,7 +7,7 @@ export const enum Status {
     INFO = 2,
     SUCCESS = 3
 }
-export default async function(text: string, status?: Status): Promise<void> {
+export default async function(text: string[], status?: Status): Promise<void> {
     return new Promise((resolve, reject) => {
         const parent = document.createElement('div');
         parent.className = 'widget center';
@@ -40,7 +40,11 @@ export default async function(text: string, status?: Status): Promise<void> {
         content.className = 'widget-content';
         const textParent = document.createElement('div');
         textParent.className = 'widget-text';
-        textParent.appendChild(document.createTextNode(text));
+        const len = text.length;
+        for(let i=0;i<len;i++) {
+            textParent.appendChild(document.createTextNode(text[i]));
+            if(i !== len - 1) textParent.appendChild(document.createElement('br'));
+        }
         content.appendChild(textParent);
         parent.appendChild(content);
 

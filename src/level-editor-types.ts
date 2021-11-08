@@ -188,8 +188,7 @@ declare namespace gravity {
             type: K,
             x: number,
             y: number,
-            onStart?: (state: T, object: V) => void,
-            cleanup?: (state: T, object: V) => void
+            startup?: (state: T, object: V) => void
         }
 
         type Body<T> = BodyType<T, 'friendly-station' | 'enemy-station', Station> |
@@ -205,22 +204,28 @@ interface Level<T = any> {
     objects: gravity.level.Body<T>[],
     tick?: (state: T, simulation: gravity.Simulation) => void,
     /**
-     * Is guaranteed to be run after every object's \`onStart\`.
+     * Is guaranteed to be run after every object's \`startup\`.
      */
-    onStart?: (state: T, simulation: gravity.Simulation) => void,
+    startup?: (state: T, simulation: gravity.Simulation) => void,
     cleanup?: (state: T, simulation: gravity.Simulation) => void
 }
 
 declare var Gravity: IGravity;
+declare global {
+    function eval(): never;
+}
 
 interface IGravity {
     /**
      * If called multiple times, only the most recent one will be respected.
      */
-    registerLevel<T = any>(level: Level<T>): void,
+    createLevel<T = any>(level: Level<T>): void,
     requestImage(url: string) => gravity.Image,
     requestSound(url: string) => gravity.Sound,
-    debug: (message: number | string) => void,
+    /**
+     * Goes straight to \`console.log()\` in testing.
+     */
+    debug: (...args: any[]) => void,
     setTimeout: (callback: string | Function, ms: number, ...args: any[]) => number,
     clearTimeout: (id: number) => void,
     setInterval: (callback: string | Function, ms: number, ...args: any[]) => number,

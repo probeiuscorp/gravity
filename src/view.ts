@@ -5,17 +5,23 @@ import { View, LevelSelectBtn, BigButton, Button } from './menu';
 import { levels } from './levels';
 import { LevelObjectAICallback } from './types';
 import { LevelEditor } from './level-editor';
+import { levelBrowser } from './level-browser';
+import { LevelData } from './safer-level';
 
 interface MainMenuState {
     levelBtn: Button,
-    levelEditorBtn: Button
+    levelEditorBtn: Button,
+    levelBrowserBtn: Button
 };
 export const mainMenu = new View<MainMenuState>((ctx, state) => {
     state.levelBtn = new BigButton(ctx, 'Play', () => {
-        setView(selectLevel);
+        setView(selectLevel, {});
     });
     state.levelEditorBtn = new BigButton(ctx, 'Level Editor', () => {
-        setView(LevelEditor);
+        setView(LevelEditor, {});
+    });
+    state.levelBrowserBtn = new BigButton(ctx, 'Level Browser', () => {
+        setView(levelBrowser, {});
     });
 }, (ctx, mousePos, state) => {
     const center = (ctx.canvas.width - BigButton.WIDTH) / 2;
@@ -25,10 +31,12 @@ export const mainMenu = new View<MainMenuState>((ctx, state) => {
     ctx.font = `96px ubuntu, monospace`;
     ctx.fillText('Gravity', ctx.canvas.width / 2, 320);
     state.levelBtn.render(center, 420, mousePos);
-    state.levelEditorBtn.render(center, 520, mousePos);
+    state.levelEditorBtn.render(center, 505, mousePos);
+    state.levelBrowserBtn.render(center, 590, mousePos);
 }, (ctx, state) => {
     state.levelBtn.unbind();
     state.levelEditorBtn.unbind();
+    state.levelBrowserBtn.unbind();
 });
 
 let currentLevel: number;
@@ -40,13 +48,26 @@ interface SelectLevelState {
 };
 export const selectLevel = new View<SelectLevelState>((ctx, state) => {
     state.backBtn = new BigButton(ctx, 'Back', () => {
-        setView(mainMenu);
+        setView(mainMenu, {});
     });
     state.buttons = [];
     for(let i=0;i<levels.length;i++) {
         state.buttons.push(new LevelSelectBtn(ctx, (i+1).toString(), () => {
             currentLevel = i;
-            setView(playingGame);
+            function advanceLevel() {
+                setView(playingGame, {
+                    level: levels[currentLevel],
+                    whenDone: (victory) => {
+                        if(victory && currentLevel + 1 < levels.length) {
+                            currentLevel++;
+                            advanceLevel();
+                        } else {
+                            setView(mainMenu, {});
+                        }
+                    }
+                });
+            }
+            advanceLevel();
         }));
     }
 }, (ctx, mousePos, state) => {
@@ -65,37 +86,31 @@ export const selectLevel = new View<SelectLevelState>((ctx, state) => {
     for(const btn of state.buttons) btn.unbind();
 });
 
+interface GameOpts {
+    level: LevelData,
+    whenDone: (victory: boolean) => void
+}
 interface GameState {
     simulation: Simulation,
     done: boolean,
     cache: any,
-    objectsWithAI: {
-        object: VBody,
-        tick: LevelObjectAICallback,
-        unbind: LevelObjectAICallback
-    }[],
+    level: LevelData,
     continueBtn: Button,
     continueKey: symbol,
     continue: boolean,
     restartBtn: Button,
     restartKey: symbol
 }
-export const playingGame = new View<GameState>((ctx, state) => {
+export const playingGame = new View<GameState, GameOpts>((ctx, state, opts) => {
     const simulation = new Simulation(ctx);
-    const level = levels[currentLevel];
+    const level = opts.level;
+    state.level = level;
     simulation.camera = new Vector(-ctx.canvas.width / 2 + level.center.x, -ctx.canvas.height / 2 + level.center.y);
-    state.objectsWithAI = [];
     state.cache = {};
     const handleContinue = () => {
         if(state.done) {
             state.continue = true;
-            currentLevel++;
-            console.log(currentLevel, levels.length);
-            if(currentLevel < levels.length) {
-                setView(playingGame);
-            } else {
-                setView(mainMenu);
-            }
+            opts.whenDone(true);
         }
     }
     state.continueBtn = new BigButton(ctx, 'Continue', handleContinue);
@@ -105,7 +120,7 @@ export const playingGame = new View<GameState>((ctx, state) => {
 
     const handleRestart = () => {
         if(!state.done) {
-            setView(playingGame);
+            setView(playingGame, opts);
         }
     };
     state.restartBtn = new LevelSelectBtn(ctx, String.fromCharCode(0x21ba), handleRestart);
@@ -138,24 +153,19 @@ export const playingGame = new View<GameState>((ctx, state) => {
                 break;
         }
         simulation.addBody(object);
-        entry.aiInit?.(object as any, state.cache);
-        if(entry.aiTick) {
-            state.objectsWithAI.push({
-                object,
-                tick: entry.aiTick,
-                unbind: entry.aiUnbind
-            });
-        }
+        entry.startup?.(state.cache, object as any);
+        // if(entry.aiTick) {
+        //     state.objectsWithAI.push({
+        //         object,
+        //         tick: entry.aiTick,
+        //         unbind: entry.aiUnbind
+        //     });
+        // }
     }
     state.simulation = simulation;
     state.done = false;
 }, (ctx, mousePos, state) => {
-    for(const entry of state.objectsWithAI) {
-        const object = entry.object;
-        // Not terribly flexible, but I've kind of backed myself into a hole
-        const isStation = object instanceof Station;
-        if((isStation && object.health > 0) || !isStation) entry.tick(object, state.cache);
-    }
+    state.level.tick?.(state, state.simulation);
     if(!state.simulation.tick()) {
         state.done = true;
         state.continueBtn.enabled = true;
@@ -176,7 +186,7 @@ export const playingGame = new View<GameState>((ctx, state) => {
         state.continueBtn.render(center - BigButton.WIDTH / 2, middle - BigButton.HEIGHT / 2 + 50, mousePos);   
     }
 }, (ctx, state) => {
-    state.objectsWithAI.forEach(entry => void entry.unbind?.(entry.object, state.cache));
+    
     state.continueBtn.unbind();
     state.restartBtn.unbind();
     state.simulation.unbind();

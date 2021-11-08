@@ -31,7 +31,7 @@ module.exports = {
     resolve: {
         extensions: [ '.ts', '.js' ]
     },
-    // devtool: 'source-map',
+    devtool: 'source-map',
     watch: true,
     plugins: [
         new MonacoWebpackPlugin({

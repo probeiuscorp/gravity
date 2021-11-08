@@ -1,14 +1,16 @@
 import { body, loadingEl } from '../main';
 
-type AsyncFunction = () => Promise<void>;
-export default function(callback: AsyncFunction) {
-    const blockingEl = document.createElement('div');
-    blockingEl.className = 'background-blocker';
-    body.appendChild(blockingEl);
-    loadingEl.style.display = 'initial';
-    callback().then(() => {
-        console.log('done blocking');
-        body.removeChild(blockingEl);
-        loadingEl.style.display = 'none';
+export default function<T = void>(callback: (doneLoading: (ret: T) => void) => void): Promise<T> {
+    return new Promise((resolve) => {
+        const blockingEl = document.createElement('div');
+        blockingEl.className = 'background-blocker';
+        body.appendChild(blockingEl);
+        loadingEl.style.display = 'initial';
+        callback((ret) => {
+            console.log('done blocking');
+            body.removeChild(blockingEl);
+            loadingEl.style.display = 'none';
+            resolve(ret);
+        });
     });
 }

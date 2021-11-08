@@ -9,7 +9,7 @@ export type PostponedRender = (ctx: CanvasRenderingContext2D) => void;
 // Gravitational constant... not sure why I bothered
 const G = 1;
 
-class Renderer {
+export class Renderer {
     private ctx: CanvasRenderingContext2D;
     public pendingUIDraws: PostponedRender[] = [];
     private simulation: Simulation;

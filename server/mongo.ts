@@ -30,7 +30,9 @@ interface ILevelSchema {
     official: boolean,
     timestamp: Date,
     levelData: string,
-    source: string
+    source: string,
+    public: string,
+    private: string
 }
 const LevelSchema = new mongoose.Schema<ILevelSchema>({
     name: {
@@ -46,6 +48,12 @@ const LevelSchema = new mongoose.Schema<ILevelSchema>({
         type: String
     },
     source: {
+        type: String
+    },
+    public: {
+        type: String
+    },
+    private: {
         type: String
     }
 });
