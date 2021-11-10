@@ -120,19 +120,22 @@ canvas {
 }
 
 .widget-text-box {
-    background-color: #535353;
+    background-color: #40444b;
     color: #fff;
     width: 150px;
     margin-bottom: 12px;
     border: none;
     font-size: 18px;
-    width: 24ch;
-    outline: 1px solid #222;
+    border: 1px solid #222;
     padding: 4px 8px;
+    border-radius: 2px;
+    width: 100%;
+    padding: 6px 14px;
 }
 
 .widget-text-box:focus {
-    outline: 1px solid #007fd4;
+    border: 1px solid #007fd4;
+    outline: none;
 }
 
 .background-blocker {
@@ -143,4 +146,8 @@ canvas {
     right: 0;
     opacity: 40%;
     background-color: black;
+}
+
+*, *::after, *::before {
+    box-sizing: border-box;
 }

@@ -161,7 +161,7 @@ app.get('/levels', (req, res) => {
                     source: doc.source,
                     levelData: doc.levelData,
                     official: doc.official,
-                    timestamp: doc.timestamp,
+                    timestamp: doc.timestamp.valueOf(),
                     id: doc.public,
                     rating: doc.rating,
                     ratings: doc.ratings,

@@ -1,0 +1,102 @@
+.level-browser {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    padding: 60px 100px;
+    overflow-y: scroll;
+}
+
+.level-browser-search input {
+    margin-bottom: initial;
+}
+
+.level-browser-search {
+    margin-bottom: 20px;
+    flex-direction: column;
+}
+
+.level-browser-sort {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 8px;
+    align-items: center;
+}
+
+.level-browser-sort-method {
+    padding: 7px 16px;
+    background-color: #444444;
+    border-radius: 18px;
+    border: 2px solid #444444;
+    cursor: pointer;
+}
+
+.level-browser-sort-method:hover {
+    background-color: #525252;
+    border: 2px solid #525252;
+}
+
+.level-browser-sort-method:active {
+    background-color: #444444;
+    border-color: #444444;
+}
+
+.level-browser-sort-method.selected {
+    border: 2px solid rgb(14, 99, 156);
+}
+
+.level-browser-filter {
+    width: 100%;
+    display: flex;
+    gap: 10px;
+}
+
+.level-browser-filter-btn {
+    margin: auto 0;
+    flex-shrink: 0;
+}
+
+.level-browser-levels {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, 290px);
+    justify-content: center;
+    gap: 20px;
+}
+
+.level-browser-title {
+    text-decoration: underline;
+    text-align: center;
+    text-overflow: ellipsis;
+    font-size: 18px;
+    margin-bottom: 10px;
+}
+
+.level-browser-level {
+    color: white;
+    width: 290px;
+    align-items: stretch;
+    display: block;
+    margin: auto 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.level-browser-level-rating {
+    background: linear-gradient(90deg, rgba(255,0,0,1) 0%, rgba(255,252,0,1) 25%, rgba(0,255,8,1) 50%, #7851A9 100%);
+    margin-bottom: 10px;
+    height: 2px;
+}
+
+.level-browser-level-rating-cover {
+    background-color: #888;
+    height: 100%;
+    float: right;
+    border-left: 1px solid rgb(48, 48, 48);
+}
+
+.level-browser-level-info {
+    text-align: center;
+    font-size: 12px;
+    margin-bottom: 10px;
+}
