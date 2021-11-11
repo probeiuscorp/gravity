@@ -7,7 +7,7 @@ export default async function(prompt: string): Promise<string> {
         status.style.fontSize = '14px';
         
         function ok() {
-            const charsValid = textbox.value.match(/^[A-Za-z0-9\-_ ]+$/g);
+            const charsValid = textbox.value.match(/^[A-Za-z0-9\-_:&$\+~`!#\?\. ]+$/g);
             const shortEnough = textbox.value.length <= 48;
             if(charsValid && shortEnough) {
                 cleanup();
@@ -21,7 +21,7 @@ export default async function(prompt: string): Promise<string> {
                 icon.style.color = colors.RED;
                 msg.appendChild(icon);
                 if(!charsValid) {
-                    msg.appendChild(document.createTextNode(' Level name must contain only alphanumerics, hyphens, underscores, and spaces.'));
+                    msg.appendChild(document.createTextNode(' Level name contains unacceptable characters.'));
                 } else {
                     msg.appendChild(document.createTextNode(' Level name must not exceed 48 characters.'));
                 }

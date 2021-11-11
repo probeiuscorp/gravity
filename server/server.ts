@@ -2,10 +2,11 @@ import express = require('express');
 import fs = require('fs');
 import path = require('path');
 import * as typescript from 'typescript';
-import { LevelModel, onConnectionFinished } from './mongo';
+import { ILevelSchema, LevelModel, onConnectionFinished } from './mongo';
 import chalk = require('chalk');
 
 import type { PostLevel } from '../src/common';
+import type { FilterQuery } from 'mongoose';
 
 export const CHECK = String.fromCharCode(0x2713);
 export const X = String.fromCharCode(0x2717);
@@ -69,6 +70,20 @@ async function generatePrivate(): Promise<string> {
     });
 }
 
+function publicInterface(doc: ILevelSchema): any {
+    return {
+        name: doc.name,
+        source: doc.source,
+        levelData: doc.levelData,
+        official: doc.official,
+        timestamp: doc.timestamp.valueOf(),
+        id: doc.public,
+        rating: doc.rating,
+        ratings: doc.ratings,
+        played: doc.played
+    }
+}
+
 app.post('/publish-level', (req, res) => {
     const json = req.body as PostLevel;
     
@@ -86,7 +101,7 @@ app.post('/publish-level', (req, res) => {
         return;
     }
 
-    if(!json.name.match(/^[a-zA-Z\-_ 0-9]+$/g)) {
+    if(!json.name.match(/^[A-Za-z0-9\-_:&$\+~`!#\?\. ]+$/g)) {
         res.status(400).json({
             error: 'Level name may only contain alphanumeric characters, hyphens, underscores and spaces.'
         });
@@ -120,7 +135,8 @@ app.post('/publish-level', (req, res) => {
                 private: privateId,
                 rating: 0,
                 ratings: 0,
-                played: 0
+                played: 0,
+                keywords: json.name.toLowerCase().split(' ')
             });
 
             level.save().then(() => {
@@ -151,23 +167,65 @@ app.post('/transpile', (req, res) => {
 });
 
 app.get('/levels', (req, res) => {
-    LevelModel.find({}).lean().exec((err, docs) => {
+    if(typeof req.query.sort !== 'string') {
+        res.sendStatus(400);
+        return;
+    }
+    
+    let sort: any;
+    if(req.query.sort === 'popular') {
+        sort = {
+            played: -1
+        };
+    } else if(req.query.sort === 'new') {
+        sort = {
+            timestamp: -1
+        };
+    } else if(req.query.sort === 'rating') {
+        sort = {
+            rating: -1
+        };
+    } else {
+        res.sendStatus(400);
+        return;
+    }
+
+    let filter: FilterQuery<ILevelSchema> = {};
+    if(typeof req.query.name === 'string' && req.query.name.length <= 64) {
+        filter = {
+            keywords: {
+                $all: req.query.name.toLowerCase().split(' ')
+            }
+        };
+    }
+
+    LevelModel.find(filter).sort(sort).lean().exec((err, docs) => {
         if(err) {
             res.sendStatus(500);
         } else {
             res.json(docs.map((doc) => {
-                return {
-                    name: doc.name,
-                    source: doc.source,
-                    levelData: doc.levelData,
-                    official: doc.official,
-                    timestamp: doc.timestamp.valueOf(),
-                    id: doc.public,
-                    rating: doc.rating,
-                    ratings: doc.ratings,
-                    played: doc.played
-                }
+                return publicInterface(doc);
             }));
         }
     });
+});
+
+app.get('/get-level', (req, res) => {
+    if(
+        typeof req.query.id === 'string' && 
+        req.query.id.length === 24 && 
+        req.query.id.match(/^[0-9a-f]+$/)
+    ) {
+        LevelModel.findOne({ public: req.query.id }).lean().exec((err, doc) => {
+            if(err) {
+                res.sendStatus(500);
+            } else if(doc) {
+                res.json(publicInterface(doc));
+            } else {
+                res.status(404).send('No such level exists.');
+            }
+        });
+    } else {
+        res.sendStatus(400);
+    }
 });

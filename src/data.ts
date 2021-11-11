@@ -506,7 +506,7 @@ export class Station extends Destructible {
     public radius = 40;
     public maxHealth = 120;
     public health = 120;
-    public static readonly totalShots: number = 10;
+    public static readonly totalShots: number = 4;
     public shotsLeft: number = Station.totalShots;
     public friendly: boolean;
     public selected: boolean = false;

@@ -29,7 +29,7 @@ mongoose.connection.on('error', () => {
     console.log(chalk.redBright(X + ' error connecting to mongo'));
 });
 
-interface ILevelSchema {
+export interface ILevelSchema {
     name: string,
     official: boolean,
     timestamp: Date,
@@ -39,7 +39,8 @@ interface ILevelSchema {
     private: string,
     rating: number,
     ratings: number,
-    played: number
+    played: number,
+    keywords: string[]
 }
 const LevelSchema = new mongoose.Schema<ILevelSchema>({
     name: {
@@ -71,6 +72,9 @@ const LevelSchema = new mongoose.Schema<ILevelSchema>({
     },
     played: {
         type: Number
+    },
+    keywords: {
+        type: [String]
     }
 });
 

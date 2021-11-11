@@ -7,7 +7,6 @@ export default function<T = void>(callback: (doneLoading: (ret: T) => void) => v
         body.appendChild(blockingEl);
         loadingEl.style.display = 'initial';
         callback((ret) => {
-            console.log('done blocking');
             body.removeChild(blockingEl);
             loadingEl.style.display = 'none';
             resolve(ret);
