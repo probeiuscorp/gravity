@@ -1,6 +1,7 @@
 export interface PostLevel {
     name: string,
-    code: string
+    code: string,
+    description?: string
 }
 
 export type PostLevelResponse = {
@@ -16,14 +17,20 @@ export interface LevelResponse {
     levelData: string,
     official: boolean,
     timestamp: number,
-    id: number,
+    id: string,
     rating: number,
     ratings: number,
-    played: number
+    played: number,
+    description?: string
 };
 
 export type FetchLevelsResponse = LevelResponse[]
 
 export interface UpdateLevel {
     id: string
+}
+
+export interface RateLevel {
+    id: string,
+    rating: number
 }

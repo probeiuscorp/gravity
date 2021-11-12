@@ -83,7 +83,7 @@
 }
 
 .level-browser-level-rating {
-    background: linear-gradient(90deg, rgba(255,0,0,1) 0%, rgba(255,252,0,1) 25%, rgba(0,255,8,1) 50%, #7851A9 100%);
+    background: linear-gradient(90deg, rgba(255,0,0,1) 0%, rgba(255,252,0,1) 25%, rgba(0,255,8,1) 50%, 60%, #7851A9 100%);
     margin-bottom: 10px;
     height: 2px;
 }

@@ -98,12 +98,13 @@ export const LevelEditor = new View<LevelEditorState, { code?: string }>((ctx, s
     }
     function publish() {
         console.log(state.editor);
-        form('Level name:').then((name) => {
+        form('Level name:').then(({ name, description}) => {
             whileLoading((done) => {
                 fetch('/publish-level', {
                     method: 'POST',
                     body: JSON.stringify({
                         name,
+                        description,
                         code: state.editor.getValue()
                     } as PostLevel),
                     headers: {

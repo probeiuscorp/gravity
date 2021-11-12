@@ -3,6 +3,7 @@ import chalk = require('chalk');
 import { CHECK, X } from './server';
 
 let connectionCallbacks: ((wasSuccessful: boolean) => void)[] = [];
+console.log('initiating mongo connection...');
 mongoose.connect(process.env.MONGODB_URI, {
     auth: {
         username: 'gravity',
@@ -40,7 +41,8 @@ export interface ILevelSchema {
     rating: number,
     ratings: number,
     played: number,
-    keywords: string[]
+    keywords: string[],
+    description?: string
 }
 const LevelSchema = new mongoose.Schema<ILevelSchema>({
     name: {
@@ -75,6 +77,9 @@ const LevelSchema = new mongoose.Schema<ILevelSchema>({
     },
     keywords: {
         type: [String]
+    },
+    description: {
+        type: String
     }
 });
 

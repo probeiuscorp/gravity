@@ -5,7 +5,7 @@ import * as typescript from 'typescript';
 import { ILevelSchema, LevelModel, onConnectionFinished } from './mongo';
 import chalk = require('chalk');
 
-import type { PostLevel } from '../src/common';
+import type { PostLevel, RateLevel } from '../src/common';
 import type { FilterQuery } from 'mongoose';
 
 export const CHECK = String.fromCharCode(0x2713);
@@ -80,8 +80,17 @@ function publicInterface(doc: ILevelSchema): any {
         id: doc.public,
         rating: doc.rating,
         ratings: doc.ratings,
-        played: doc.played
+        played: doc.played,
+        description: doc.description
     }
+}
+
+function isValidId(id: any): id is string {
+    return (
+        typeof id === 'string' && 
+        id.length === 24 && 
+        id.match(/^[0-9a-f]+$/) !== null
+    );
 }
 
 app.post('/publish-level', (req, res) => {
@@ -123,6 +132,19 @@ app.post('/publish-level', (req, res) => {
         return;
     }
 
+    const description = json.description;
+    if(!description) {
+        if(typeof description !== 'string' || description.length > 2048) {
+            res.status(400).json({
+                error: 'Level description must be a string of less than 2048 characters.'
+            });
+        } else if(description.indexOf('<') > 0 || description.indexOf('>') > 0) {
+            res.status(400).json({
+                error: 'Level description must not contain "<" or ">".'
+            });
+        }
+    }
+
     generatePublic().then((publicId) => {
         generatePrivate().then((privateId) => {
             const level = new LevelModel({
@@ -136,7 +158,8 @@ app.post('/publish-level', (req, res) => {
                 rating: 0,
                 ratings: 0,
                 played: 0,
-                keywords: json.name.toLowerCase().split(' ')
+                keywords: json.name.toLowerCase().split(' '),
+                description
             });
 
             level.save().then(() => {
@@ -210,17 +233,62 @@ app.get('/levels', (req, res) => {
     });
 });
 
+app.post('/rate-level', (req, res) => {
+    const { id, rating } = req.body as RateLevel;
+    if(!isValidId(id)) {
+        res.sendStatus(400);
+        return;
+    }
+    if(typeof rating !== 'number' || !Number.isInteger(rating)) {
+        res.sendStatus(400);
+        return;
+    }
+
+    LevelModel.findOne({ public: id }).exec((err, doc) => {
+        if(err) {
+            res.sendStatus(500);
+        } else if(doc) {
+            const ratings = doc.ratings++;
+            doc.rating = (doc.rating * ratings + rating) / (ratings + 1);
+            doc.save((err) => {
+                if(err) {
+                    res.sendStatus(500);
+                } else {
+                    res.sendStatus(200);
+                }
+            });
+        } else {
+            res.status(404).send('No such level exists.');
+        }
+    });
+});
+
 app.get('/get-level', (req, res) => {
-    if(
-        typeof req.query.id === 'string' && 
-        req.query.id.length === 24 && 
-        req.query.id.match(/^[0-9a-f]+$/)
-    ) {
-        LevelModel.findOne({ public: req.query.id }).lean().exec((err, doc) => {
+    res.setHeader('Cache-Control', 'no-store');
+    if(isValidId(req.query.id)) {
+        LevelModel.findOne({ public: req.query.id }).exec((err, doc) => {
             if(err) {
                 res.sendStatus(500);
             } else if(doc) {
                 res.json(publicInterface(doc));
+            } else {
+                res.status(404).send('No such level exists.');
+            }
+        });
+    } else {
+        res.sendStatus(400);
+    }
+});
+
+app.get('/played-level', (req, res) => {
+    if(isValidId(req.query.id)) {
+        LevelModel.findOne({ public: req.query.id }).exec((err, doc) => {
+            if(err) {
+                res.sendStatus(500);
+            } else if(doc) {
+                // Hopefully this causes no concurrency problems.
+                doc.played++;
+                doc.save();
             } else {
                 res.status(404).send('No such level exists.');
             }

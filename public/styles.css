@@ -83,6 +83,7 @@ canvas {
     display: inline-block;
     margin-top: auto;
     margin-bottom: auto;
+    width: 100%;
 }
 
 .widget.center {
@@ -92,7 +93,7 @@ canvas {
     transform: translate(-50%, -50%);
 }
 
-.widget:hover {
+.widget:hover:not(.no-hover) {
     background-color: rgb(52, 54, 59);
 }
 
@@ -102,13 +103,17 @@ canvas {
 
 .widget-btn {
     color: rgb(255, 255, 255);
-    background: linear-gradient(to right, rgb(14, 99, 156), rgb(5, 83, 136));
+    background: linear-gradient(90deg, rgb(14, 99, 156), rgb(5, 83, 136));
     display: inline-block;
     padding: 6px 10px;
     cursor: pointer;
 }
 
-.widget-btn:hover {
+.widget-btn.disabled {
+    background-color: rgb(8, 88, 145);
+}
+
+.widget-btn:hover:not(.disabled) {
     box-shadow: rgba(0, 0, 0, 0.36) 0px 0px 8px 2px;
     background: rgb(17, 119, 187);
 }
@@ -136,6 +141,12 @@ canvas {
 .widget-text-box:focus {
     border: 1px solid #007fd4;
     outline: none;
+}
+
+.widget-textarea {
+    resize: none;
+    font-family: inherit;
+    height: 4em;
 }
 
 .background-blocker {

@@ -1,6 +1,7 @@
 import { FetchLevelsResponse } from './common';
 import btn from './elements/create-btn';
 import genericStatus, { Status } from './elements/generic-status';
+import previewContent from './elements/preview-content';
 import whileLoading from './elements/while-loading';
 import { levelDetails } from './level-details';
 import { body, canvas, disableRendering, enableRendering, setView } from './main';
@@ -12,7 +13,6 @@ export interface LevelBrowserState {
     root: HTMLElement
 }
 
-const BULLET = String.fromCharCode(0x2022);
 export const levelBrowser = new View<LevelBrowserState>((ctx, state) => {
     disableRendering();
     canvas.style.display = 'none';
@@ -100,35 +100,20 @@ export const levelBrowser = new View<LevelBrowserState>((ctx, state) => {
                         const icon = document.createElement('i');
                         icon.className = 'bi bi-patch-check-fill';
                         icon.style.fontSize = 'medium';
-                        icon.title = 'Official level.';
+                        icon.title = 'Official level';
                         header.appendChild(icon);
                     }
                     header.appendChild(document.createTextNode((level.official ? ' ' : '') + level.name));
                     parent.appendChild(header);
 
-                    const thumbnail = document.createElement('img');
-                    thumbnail.width = 250;
-                    thumbnail.height = 155;
-                    thumbnail.src = '/public/img/placeholder_250x155.png';
-                    parent.appendChild(thumbnail);
-
-                    const rating = document.createElement('div');
-                    rating.className = 'level-browser-level-rating';
-                    const coveringRating = document.createElement('div');
-                    coveringRating.className = 'level-browser-level-rating-cover';
-                    rating.appendChild(coveringRating);
-                    coveringRating.style.width = Math.round(100 - level.rating * 100) +'%';
-                    parent.appendChild(rating);
-
-                    const text = document.createElement('div');
-                    text.className = 'level-browser-level-info';
-                    text.innerText = level.ratings + ' ratings ' + BULLET + ' ' + level.played +' plays';
-                    parent.appendChild(text);
+                    parent.appendChild(previewContent(level));
 
                     const buttons = document.createElement('div');
                     buttons.className = 'widget-btns';
                     buttons.appendChild(btn('Play', () => {
                         const levelData = saferLevel(level.levelData, false);
+                        fetch('/played-level?id='+level.id);
+
                         if(levelData) {
                             setView(playingGame, {
                                 level: levelData,
