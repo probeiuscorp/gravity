@@ -42,6 +42,7 @@ export interface ILevelSchema {
     ratings: number,
     played: number,
     keywords: string[],
+    thumbnail: string,
     description?: string
 }
 const LevelSchema = new mongoose.Schema<ILevelSchema>({
@@ -77,6 +78,10 @@ const LevelSchema = new mongoose.Schema<ILevelSchema>({
     },
     keywords: {
         type: [String]
+    },
+    thumbnail: {
+        type: String,
+        default: '/public/img/placeholder_250x155.png'
     },
     description: {
         type: String

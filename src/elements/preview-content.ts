@@ -1,5 +1,17 @@
 import { LevelResponse } from '../common';
 
+function format(s: number): string {
+    if(s < 1000) {
+        return s.toLocaleString();
+    } else if(s < 1e6) {
+        return (Math.round(s / 1e2) / 10).toLocaleString() + 'k';
+    } else if(s < 1e9) {
+        return (Math.round(s / 1e5) / 10).toLocaleString() + 'm';
+    } else {
+        return (Math.round(s / 1e8) / 10).toLocaleString() + 'b'; // because this will certainly be played a billion times
+    }
+}
+
 const BULLET = String.fromCharCode(0x2022);
 export default function(level: LevelResponse): HTMLElement {
     const parent = document.createElement('div');
@@ -20,7 +32,7 @@ export default function(level: LevelResponse): HTMLElement {
 
     const text = document.createElement('div');
     text.className = 'level-browser-level-info';
-    text.innerText = level.ratings + ' ratings ' + BULLET + ' played ' + level.played +' times';
+    text.innerText = level.ratings + ' ratings ' + BULLET + ' played ' + format(level.played) + ' times';
     parent.appendChild(text);
 
     return parent;

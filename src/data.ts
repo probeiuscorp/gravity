@@ -21,11 +21,11 @@ export class Renderer {
 
     public drawImage(location: Vector, img: Image, scale: number, rotation?: number) {
         let camera = this.simulation.camera;
+        this.ctx.scale(this.simulation.zoom, this.simulation.zoom);
         if(rotation) {
             this.ctx.translate(location.x - camera.x, location.y - camera.y);
             this.ctx.rotate(rotation);
-            this.ctx.translate(-img.width*scale/2, -img.height*scale/2);
-            this.ctx.drawImage(img, 0, 0, img.width * scale, img.height * scale);
+            this.ctx.drawImage(img, -img.width*scale/2, -img.height*scale/2, img.width * scale, img.height * scale);
             this.ctx.resetTransform();
         } else {
             this.ctx.translate(-camera.x, -camera.y);
@@ -43,6 +43,7 @@ export class Simulation {
     public objects: VBody[] = [];
     public renderer: Renderer;
     public camera = new Vector(0, 0);
+    public zoom = 1;
     public frame: number = 0;
     private particles: Particle[] = [];
     private ctx: CanvasRenderingContext2D;
@@ -55,7 +56,8 @@ export class Simulation {
         let selectedStation: Station = null;
 
         onClick(this, (e) => {
-            let v = e.pos.add(this.camera);
+            let v = e.pos.shrink(this.zoom).add(this.camera);
+            
             let selectedAny = false;
             for(const object of this.objects) {
                 if(object instanceof Station && object.isWithin(v) && object.friendly) {
@@ -76,8 +78,12 @@ export class Simulation {
             }
         });
 
-        document.addEventListener('keydown', this.handleKeydown.bind(this), { passive: true });
-        document.addEventListener('keyup',   this.handleKeyup.bind(this),   { passive: true });
+        this.handleKeydown = this.handleKeydown.bind(this);
+        this.handleKeyup   = this.handleKeyup.bind(this);
+        this.handleWheel   = this.handleWheel.bind(this);
+        document.addEventListener('keydown', this.handleKeydown, { passive: true });
+        document.addEventListener('keyup',   this.handleKeyup,   { passive: true });
+        canvas.addEventListener('wheel',   this.handleWheel,   { passive: true });
 
         onMove(this, (newPos) => {
             if(this.panning) {
@@ -101,6 +107,20 @@ export class Simulation {
         if(e.key === ' ') {
             this.panning = false;
         }
+    }
+
+    private handleWheel(e: WheelEvent) {
+        const oldZoom = this.zoom;
+        if(e.deltaY > 0) {
+            this.zoom = Math.max(this.zoom * 0.9, 0.5);
+        } else {
+            this.zoom = Math.min(2, this.zoom * 1.1);
+        }
+
+        const mouse = new Vector(e.x, e.y);
+        const pos = mouse.shrink(oldZoom).add(this.camera);
+        const change = pos.subtract(this.camera).scale(this.zoom - oldZoom);
+        this.camera = this.camera.add(change);
     }
 
     public spawnParticle(particle: Particle) {
@@ -150,6 +170,7 @@ export class Simulation {
             }
         }
 
+        this.ctx.scale(this.zoom, this.zoom);
         this.ctx.translate(-this.camera.x, -this.camera.y);
         for(const callback of this.renderer.pendingUIDraws) {
             callback(this.ctx);
@@ -163,11 +184,12 @@ export class Simulation {
     /**
      * Should be called to make sure all event listeners are cleaned up.
      */
-    unbind() {
+    public unbind() {
         removeMoveListener(this);
         removeClickListener(this);
-        canvas.removeEventListener('keyup', this.handleKeyup);
-        canvas.removeEventListener('keydown', this.handleKeydown);
+        document.removeEventListener('keyup', this.handleKeyup);
+        document.removeEventListener('keydown', this.handleKeydown);
+        canvas.removeEventListener('wheel', this.handleWheel);
     }
 }
 
@@ -285,6 +307,7 @@ export class Particle extends Vector {
             this.listeners[this.frame]?.();
         }
         
+        ctx.scale(this.simulation.zoom, this.simulation.zoom);
         ctx.translate(-this.simulation.camera.x, -this.simulation.camera.y);
         ctx.drawImage(this.resource, 0, this.frame * this.w, this.w, this.w, this.x - this.w * this.scaleFactor, this.y - this.w * this.scaleFactor, this.w*2*this.scaleFactor, this.w*2*this.scaleFactor);
         ctx.resetTransform();

@@ -7,6 +7,7 @@ import chalk = require('chalk');
 
 import type { PostLevel, RateLevel } from '../src/common';
 import type { FilterQuery } from 'mongoose';
+import { waitForAll } from './util';
 
 export const CHECK = String.fromCharCode(0x2713);
 export const X = String.fromCharCode(0x2717);
@@ -18,10 +19,10 @@ app.use('/public', express.static(path.join(__dirname, '..', 'public')));
 app.use('/lib/bootstrap-icons', express.static(path.join(__dirname, '..', 'node_modules', 'bootstrap-icons')));
 app.use(express.json());
 
+const html = fs.readFileSync(path.join(__dirname, 'index.html')).toString();
+
 app.get('/', (req, res) => {
-    fs.readFile(path.join(__dirname, 'index.html'), (err, data) => {
-        res.send(data.toString());
-    });
+    res.send(html);
 });
 
 const port = process.env.PORT;
@@ -85,6 +86,9 @@ function publicInterface(doc: ILevelSchema): any {
     }
 }
 
+/**
+ * For public ID's
+ */
 function isValidId(id: any): id is string {
     return (
         typeof id === 'string' && 
@@ -110,7 +114,7 @@ app.post('/publish-level', (req, res) => {
         return;
     }
 
-    if(!json.name.match(/^[A-Za-z0-9\-_:&$\+~`!#\?\. ]+$/g)) {
+    if(!json.name.match(/^[A-Za-z0-9\-_:&$\+~`!#\?\.\, ]+$/g)) {
         res.status(400).json({
             error: 'Level name may only contain alphanumeric characters, hyphens, underscores and spaces.'
         });
@@ -145,31 +149,34 @@ app.post('/publish-level', (req, res) => {
         }
     }
 
-    generatePublic().then((publicId) => {
-        generatePrivate().then((privateId) => {
-            const level = new LevelModel({
-                name: json.name,
-                timestamp: new Date(),
-                levelData: jsCode,
-                source: json.code,
-                official: false,
-                public: publicId,
-                private: privateId,
-                rating: 0,
-                ratings: 0,
-                played: 0,
-                keywords: json.name.toLowerCase().split(' '),
-                description
-            });
 
-            level.save().then(() => {
-                res.json({
-                    succcess: true
-                });
-            }).catch(() => {
-                res.status(500).json({
-                    error: 'There was an error saving the level to the database.'
-                });
+    waitForAll({
+        privateId: generatePrivate(),
+        publicId: generatePublic()
+    }).then(({ privateId, publicId }) => {
+        const level = new LevelModel({
+            name: json.name,
+            timestamp: new Date(),
+            levelData: jsCode,
+            source: json.code,
+            official: false,
+            public: publicId,
+            private: privateId,
+            rating: 0,
+            ratings: 0,
+            played: 0,
+            keywords: json.name.toLowerCase().split(' '),
+            thumbnail: '/public/thumbnails/' + publicId + '.jpg',
+            description
+        });
+
+        level.save().then(() => {
+            res.json({
+                succcess: true
+            });
+        }).catch(() => {
+            res.status(500).json({
+                error: 'There was an error saving the level to the database.'
             });
         });
     });

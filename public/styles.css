@@ -149,6 +149,14 @@ canvas {
     height: 4em;
 }
 
+.widget-input-file {
+    margin-bottom: 15px;
+}
+
+input[type="file"] {
+    display: none;
+}
+
 .background-blocker {
     position: absolute;
     top: 0;

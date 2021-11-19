@@ -1,9 +1,8 @@
 // import { LevelData } from './common';
 import { Antigravity, BlackHole, Moon, Obstacle, Planet, Simulation, Station, VBody, Vector } from './data';
-import { BasicBind, onKey, removeKeyListener, setView } from './main';
+import { BasicBind, disableRendering, enableRendering, onKey, removeKeyListener, setView } from './main';
 import { View, LevelSelectBtn, BigButton, Button } from './menu';
 import { levels } from './levels';
-import { LevelObjectAICallback } from './types';
 import { LevelEditor } from './level-editor';
 import { levelBrowser } from './level-browser';
 import { LevelData } from './safer-level';
@@ -130,9 +129,7 @@ export const playingGame = new View<GameState, GameOpts>((ctx, state, opts) => {
     onKey(state.backKey, new BasicBind('Backspace', {}, handleBack));
 
     const handleRestart = () => {
-        if(!state.done) {
-            setView(playingGame, opts);
-        }
+        setView(playingGame, opts);
     };
     state.restartBtn = new LevelSelectBtn(ctx, String.fromCharCode(0x21ba), handleRestart);
     state.restartKey = Symbol('playingGame$restartKey');
@@ -199,10 +196,9 @@ export const playingGame = new View<GameState, GameOpts>((ctx, state, opts) => {
         ctx.strokeText(text, center, middle - 50);
         ctx.fillText(text, center, middle - 50);
         state.continueBtn.render(center - BigButton.WIDTH / 2, middle - BigButton.HEIGHT / 2 + 50, mousePos);
-        state.restartBtnEnd.render(center - BigButton.WIDTH / 2, middle - BigButton.HEIGHT / 2 + 150, mousePos);
+        state.restartBtnEnd.render(center - BigButton.WIDTH / 2, middle - BigButton.HEIGHT / 2 + 135, mousePos);
     }
 }, (ctx, state) => {
-    
     state.continueBtn.unbind();
     state.restartBtn.unbind();
     state.simulation.unbind();

@@ -42,7 +42,8 @@ const whitelist = [
     'ReferenceError',
     'SyntaxError',
     'RegExp',
-    'undefined'
+    'undefined',
+    'Promise'
 ];
 
 var saferCtx: any = {};
@@ -134,6 +135,7 @@ export default function saferLevel(code: string, testing: boolean): LevelData | 
             console.log('error encountered:', e.name + ': ' + e.message);
             genericStatus(['Error encountered while loading level.', 'See console for details.'], Status.ERROR);
         } else {
+            console.log('error encountered:', e.name + ': ' + e.message);
             genericStatus(['Error encountered while loading level.'], Status.ERROR);
         }
         return false;

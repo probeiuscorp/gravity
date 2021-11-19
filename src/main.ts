@@ -68,16 +68,13 @@ export function removeClickListener(identifier: any) {
 
 import { Vector } from './data';
 import { View } from './menu';
-import { mainMenu } from './view';
+import saferLevel from './safer-level';
+import { mainMenu, playingGame } from './view';
 
 export const canvas = document.getElementById('canvas') as HTMLCanvasElement;
 export var currentPos: Vector = new Vector(0, 0);
 export const ctx = canvas.getContext('2d', { alpha: true });
 export var cursor: string = '';
-
-export function checkForExhaustive(v: never) {
-    throw new Error('Was not exhaustive.');
-}
 
 export function setCursor(_cursor: string) {
     cursor = _cursor;
@@ -92,7 +89,7 @@ export function setView<T extends object>(newView: View<any, T>, options: T) {
 
 canvas.addEventListener('contextmenu', (e) => e.preventDefault());
 canvas.addEventListener('mouseup', (e) => {
-    let clickEvent: ClickEvent = {
+    const clickEvent: ClickEvent = {
         lmb: e.button === 0,
         rmb: e.button === 2,
         mmb: e.button === 1,
@@ -127,7 +124,6 @@ const mouseMove = debounce(function(e: MouseEvent) {
     const listeners = moveListeners.values();
     for(const listener of listeners) listener(newPos);
     currentPos = newPos;
-    console.log('running');
 }, 50, true);
 canvas.addEventListener('mousemove', mouseMove);
 
@@ -217,3 +213,6 @@ export const colors = {
     INFO: '#17a2b8',
     SUCCESS: '#28a745'
 }
+
+export { playingGame };
+export { saferLevel };
