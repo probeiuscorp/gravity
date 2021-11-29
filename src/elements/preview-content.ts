@@ -19,7 +19,7 @@ export default function(level: LevelResponse): HTMLElement {
     const thumbnail = document.createElement('img');
     thumbnail.width = 250;
     thumbnail.height = 155;
-    thumbnail.src = '/public/img/placeholder_250x155.png';
+    thumbnail.src = level.thumbnail;
     parent.appendChild(thumbnail);
 
     const rating = document.createElement('div');

@@ -1,7 +1,9 @@
 import { body, colors } from '../main';
 import btn from './create-btn';
 
-export default async function(prompt: string): Promise<{ name: string, description?: string}> {
+const MB = 2**20;
+
+export default async function(prompt: string): Promise<{ name: string, description?: string, thumbnail?: File}> {
     return new Promise((resolve, reject) => {
         const status = document.createElement('div');
         status.style.fontSize = '14px';
@@ -13,9 +15,10 @@ export default async function(prompt: string): Promise<{ name: string, descripti
             const descriptionNoContain = dv.indexOf('<') === -1 && dv.indexOf('>') === -1;
             const descriptionShortEnough = dv.length <= 2048;
             const file = thumbnailInput.files[0];
-            if(charsValid && shortEnough && descriptionNoContain && descriptionShortEnough && file) {
+            const thumbnailSmallEnough = file === undefined || file.size <= MB;
+            if(charsValid && shortEnough && descriptionNoContain && descriptionShortEnough && thumbnailSmallEnough) {
                 cleanup();
-                resolve({ name: textbox.value, description: dv });
+                resolve({ name: textbox.value, description: dv, thumbnail: file });
             } else {
                 status.textContent = '';
                 const msg = document.createElement('div');
@@ -32,8 +35,8 @@ export default async function(prompt: string): Promise<{ name: string, descripti
                     msg.appendChild(document.createTextNode(' Description must not contain "<" or ">".'));
                 } else if(!descriptionShortEnough) {
                     msg.appendChild(document.createTextNode(' Description must not exceed 2048 characters.'));
-                } else if(!file) {
-                    msg.appendChild(document.createTextNode(' No thumbnail provided.'));
+                } else if(!thumbnailSmallEnough) {
+                    msg.appendChild(document.createTextNode(' Thumbnail must not be larger than 1MB.'));
                 }
                 msg.style.color = colors.RED;
                 status.appendChild(msg);
@@ -98,7 +101,7 @@ export default async function(prompt: string): Promise<{ name: string, descripti
 
         const headerThumbnail = document.createElement('div');
         headerThumbnail.className = 'widget-text';
-        headerThumbnail.textContent = 'Thumbnail';
+        headerThumbnail.textContent = 'Thumbnail - 250x155 (optional)';
 
         const id = 'thumbnail-input-file';
         const thumbnailLabel = document.createElement('label');

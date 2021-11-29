@@ -5,7 +5,7 @@ interface CacheLevel07 {
     forward: boolean
 }
 
-registerLevel<CacheLevel07>({
+registerLevel({
     name: 'Level 7',
     level: 7,
     center: {

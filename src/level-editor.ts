@@ -98,7 +98,7 @@ export const LevelEditor = new View<LevelEditorState, { code?: string }>((ctx, s
     }
     function publish() {
         console.log(state.editor);
-        form('Level name:').then(({ name, description}) => {
+        form('Level name:').then(({ name, description, thumbnail }) => {
             whileLoading((done) => {
                 fetch('/publish-level', {
                     method: 'POST',
@@ -112,10 +112,16 @@ export const LevelEditor = new View<LevelEditorState, { code?: string }>((ctx, s
                     }
                 }).then((res) => res.json()).then((json: PostLevelResponse) => {
                     done();
-                    if(json.error) {
-                        genericStatus([`Server refused: ${json.error}`], Status.ERROR);
-                    } else {
+                    if(json.error === false) {
                         genericStatus(['Level published succesfully.'], Status.SUCCESS);
+                        if(thumbnail) {
+                            fetch('/publish-level/thumbnail?private='+json.id, {
+                                method: 'POST',
+                                body: thumbnail
+                            });
+                        }
+                    } else {
+                        genericStatus([`Server refused: ${json.error}`], Status.ERROR);
                     }
                 }).catch(() => {
                     done();

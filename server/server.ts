@@ -1,16 +1,25 @@
+export const CHECK = String.fromCharCode(0x2713);
+export const X = String.fromCharCode(0x2717);
+
+const mode: 'development' | 'production' = process.env.NODE_ENV as any;
+if(mode !== 'development' && mode !== 'production') {
+    console.log(chalk.redBright(X + ' NODE_ENV was not (correctly) provided. must be either: "development" or "production".'));
+    process.exit(1);
+} else {
+    console.log(`server running in "${mode}" mode`);
+}
+
 import express = require('express');
 import fs = require('fs');
 import path = require('path');
 import * as typescript from 'typescript';
 import { ILevelSchema, LevelModel, onConnectionFinished } from './mongo';
 import chalk = require('chalk');
+import sharp = require('sharp');
 
 import type { PostLevel, RateLevel } from '../src/common';
 import type { FilterQuery } from 'mongoose';
 import { waitForAll } from './util';
-
-export const CHECK = String.fromCharCode(0x2713);
-export const X = String.fromCharCode(0x2717);
 
 const app = express();
 
@@ -18,6 +27,14 @@ app.use('/dist', express.static(path.join(__dirname, '..', 'dist')));
 app.use('/public', express.static(path.join(__dirname, '..', 'public')));
 app.use('/lib/bootstrap-icons', express.static(path.join(__dirname, '..', 'node_modules', 'bootstrap-icons')));
 app.use(express.json());
+app.use(express.raw({
+    type: 'image/png',
+    limit: '1mb'
+}));
+app.use(express.raw({
+    type: 'image/jpeg',
+    limit: '1mb'
+}));
 
 const html = fs.readFileSync(path.join(__dirname, 'index.html')).toString();
 
@@ -40,6 +57,7 @@ function transpile(code: string): string {
     });
 }
 
+// To my understanding pseudo-random RNG should not create any problems here.
 const hex = '0123456789abcdef';
 async function generatePublic(): Promise<string> {
     return new Promise(async (resolve) => {
@@ -82,7 +100,8 @@ function publicInterface(doc: ILevelSchema): any {
         rating: doc.rating,
         ratings: doc.ratings,
         played: doc.played,
-        description: doc.description
+        description: doc.description,
+        thumbnail: doc.thumbnail
     }
 }
 
@@ -166,13 +185,13 @@ app.post('/publish-level', (req, res) => {
             ratings: 0,
             played: 0,
             keywords: json.name.toLowerCase().split(' '),
-            thumbnail: '/public/thumbnails/' + publicId + '.jpg',
             description
         });
 
         level.save().then(() => {
             res.json({
-                succcess: true
+                error: false,
+                id: privateId
             });
         }).catch(() => {
             res.status(500).json({
@@ -180,6 +199,43 @@ app.post('/publish-level', (req, res) => {
             });
         });
     });
+});
+
+app.post('/publish-level/thumbnail', (req, res) => {
+    if(typeof req.query.private === 'string') {
+        if(Buffer.isBuffer(req.body)) {
+            LevelModel.findOne({ private: req.query.private as string }).then((document) => {
+                if(document) {
+                    document.thumbnail = `/public/thumbnails/${document.public}.jpg`;
+                    document.save().then(() => {
+                        sharp(req.body)
+                            .resize(250, 155, {
+                                fit: 'contain',
+                                background: {
+                                    r: 0,
+                                    g: 0,
+                                    b: 0
+                                }
+                            })
+                            .jpeg()
+                            .toFile(path.join(__dirname, '..', 'public', 'thumbnails', document.public + '.jpg'))
+                            .then(() => {
+                                res.sendStatus(200);
+                            });
+                    });
+                } else {
+                    // Sends 200 in production to hide private lobby keys
+                    res.sendStatus(mode === 'development' ? 200 : 404);
+                }
+            }).catch(() => {
+                res.sendStatus(500);
+            });
+        } else {
+            res.status(400).send('Request body was not an image.');
+        }
+    } else {
+        res.status(400).send('No query parameter "private" was provided.');
+    }
 });
 
 app.post('/transpile', (req, res) => {

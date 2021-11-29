@@ -21,7 +21,8 @@ export interface LevelResponse {
     rating: number,
     ratings: number,
     played: number,
-    description?: string
+    description?: string,
+    thumbnail: string
 };
 
 export type FetchLevelsResponse = LevelResponse[]

@@ -42,7 +42,7 @@ export interface ILevelSchema {
     ratings: number,
     played: number,
     keywords: string[],
-    thumbnail: string,
+    thumbnail?: string,
     description?: string
 }
 const LevelSchema = new mongoose.Schema<ILevelSchema>({
