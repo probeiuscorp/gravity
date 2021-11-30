@@ -61,6 +61,7 @@ canvas {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "HelveticaNeue-Light", system-ui, "Ubuntu", "Droid Sans", sans-serif;
     font-size: 16px;
     display: flex;
+    flex-direction: column;
 }
 
 .widget.br {

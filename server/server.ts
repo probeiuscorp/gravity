@@ -212,9 +212,9 @@ app.post('/publish-level/thumbnail', (req, res) => {
                             .resize(250, 155, {
                                 fit: 'contain',
                                 background: {
-                                    r: 0,
-                                    g: 0,
-                                    b: 0
+                                    r: 31,
+                                    g: 35,
+                                    b: 43
                                 }
                             })
                             .jpeg()

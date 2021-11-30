@@ -4,8 +4,10 @@ import { BasicBind, disableRendering, enableRendering, onKey, removeKeyListener,
 import { View, LevelSelectBtn, BigButton, Button } from './menu';
 import { levels } from './levels';
 import { LevelEditor } from './level-editor';
-import { levelBrowser } from './level-browser';
+import { levelBrowser, playLevel } from './level-browser';
 import { LevelData } from './safer-level';
+import whileLoading from './elements/while-loading';
+import { LevelResponse } from './common';
 
 interface MainMenuState {
     levelBtn: Button,
@@ -53,16 +55,19 @@ export const selectLevel = new View<SelectLevelState>((ctx, state) => {
     for(let i=0;i<levels.length;i++) {
         state.buttons.push(new LevelSelectBtn(ctx, (i+1).toString(), () => {
             currentLevel = i;
-            function advanceLevel() {
-                setView(playingGame, {
-                    level: levels[currentLevel],
-                    whenDone: (victory) => {
-                        if(victory && currentLevel + 1 < levels.length) {
-                            currentLevel++;
-                            advanceLevel();
-                        } else {
-                            setView(mainMenu, {});
-                        }
+            async function advanceLevel() {
+                const level = await whileLoading<LevelResponse>(async (doneLoading) => {
+                    const resp = await fetch('/get-level?id='+levels[currentLevel]);
+                    const level = await resp.json() as LevelResponse;
+                    doneLoading(level);
+                });
+
+                playLevel(level, (victory) => {
+                    if(victory && currentLevel + 1 < levels.length) {
+                        currentLevel++;
+                        advanceLevel();
+                    } else {
+                        setView(mainMenu, {});
                     }
                 });
             }

@@ -10,10 +10,11 @@ import { PostLevel, PostLevelResponse } from './common';
 import form from './elements/form';
 import genericStatus, { Status } from './elements/generic-status';
 import saferLevel from './safer-level';
+import * as Projects from './projects';
 
 const container = document.getElementById('container');
 
-const defaultText = 
+export const defaultText = 
 `interface LevelState {
 
 }
@@ -24,9 +25,10 @@ Gravity.createLevel<LevelState>({
         y: 0
     },
     objects: [
-\t\t
+        
     ]
 });`;
+
 
 monaco.languages.typescript.typescriptDefaults.setExtraLibs([{
     content: types
@@ -34,8 +36,10 @@ monaco.languages.typescript.typescriptDefaults.setExtraLibs([{
 export interface LevelEditorState {
     editor: monaco.editor.IStandaloneCodeEditor,
     overlayEl: HTMLElement,
+    project: Projects.Project,
+    saveInterval: number
 }
-export const LevelEditor = new View<LevelEditorState, { code?: string }>((ctx, state, opts) => {
+export const LevelEditor = new View<LevelEditorState, { code?: string, project?: Projects.Project }>((ctx, state, opts) => {
     state.editor = monaco.editor.create(container, {
         language: 'typescript',
         theme: 'vs-dark',
@@ -53,20 +57,39 @@ export const LevelEditor = new View<LevelEditorState, { code?: string }>((ctx, s
         lineNumber: 11,
         column: 9
     });
+
+    if(opts.project) {
+        state.project = opts.project;
+    }
+
+    if(!state.project) {
+        Projects.selectProject().then((project) => {
+            if(project) {
+                state.project = project;
+                state.editor.setValue(project.levelData);
+            } else {
+                setView(mainMenu, {});
+            }
+        });
+    }
+
     function exit() {
         confirmExit().then((decision) => {
             if(decision !== ConfirmExit.CANCEL) {
                 if(decision === ConfirmExit.SAVE_AND_EXIT) {
                     save();
                 }
-                enableRendering();
                 setView(mainMenu, {});
             }
         });
     }
-    function newProject() {
+    async function projects() {
+        save();
+        state.project = await Projects.selectProject();
+        state.editor.setValue(state.project.levelData);
     }
     function test() {
+        save();
         const sourceCode = state.editor.getValue();
         whileLoading<string>((done) => {
             fetch('/transpile', {
@@ -81,12 +104,12 @@ export const LevelEditor = new View<LevelEditorState, { code?: string }>((ctx, s
         }).then((code) => {
             const levelData = saferLevel(code, true);
             if(levelData) {
-                enableRendering();
                 setView(playingGame, {
                     level: levelData,
                     whenDone: () => {
                         setView(LevelEditor, {
-                            code: sourceCode
+                            code: sourceCode,
+                            project: state.project
                         });
                     }
                 });
@@ -94,8 +117,12 @@ export const LevelEditor = new View<LevelEditorState, { code?: string }>((ctx, s
         });
     }
     function save() {
-        
+        if(state.project) {
+            state.project.levelData = state.editor.getValue();
+            Projects.saveProjects(Projects.projects);
+        }
     }
+    state.saveInterval = window.setInterval(save, 5 * 1e3);
     function publish() {
         console.log(state.editor);
         form('Level name:').then(({ name, description, thumbnail }) => {
@@ -113,12 +140,11 @@ export const LevelEditor = new View<LevelEditorState, { code?: string }>((ctx, s
                 }).then((res) => res.json()).then((json: PostLevelResponse) => {
                     done();
                     if(json.error === false) {
-                        genericStatus(['Level published succesfully.'], Status.SUCCESS);
                         if(thumbnail) {
                             fetch('/publish-level/thumbnail?private='+json.id, {
                                 method: 'POST',
                                 body: thumbnail
-                            });
+                            }).then(() => void genericStatus(['Level published succesfully.'], Status.SUCCESS));
                         }
                     } else {
                         genericStatus([`Server refused: ${json.error}`], Status.ERROR);
@@ -132,22 +158,22 @@ export const LevelEditor = new View<LevelEditorState, { code?: string }>((ctx, s
     }
 
     state.editor.addAction({
-        id: 'gravity-exit',
+        id: 'gravity:exit',
         label: 'Gravity: Exit',
         run: exit
     });
     state.editor.addAction({
-        id: 'gravity-new',
-        label: 'Gravity: New project',
-        run: newProject
+        id: 'gravity:project',
+        label: 'Gravity: Projects',
+        run: projects
     });
     state.editor.addAction({
-        id: 'gravity-test',
+        id: 'gravity:test',
         label: 'Gravity: Test project',
         run: test
     });
     state.editor.addAction({
-        id: 'gravity-save',
+        id: 'gravity:save',
         label: 'Gravity: Save project',
         keybindings: [
             monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_S
@@ -155,7 +181,7 @@ export const LevelEditor = new View<LevelEditorState, { code?: string }>((ctx, s
         run: save
     });
     state.editor.addAction({
-        id: 'gravity-publish',
+        id: 'gravity:publish',
         label: 'Gravity: Publish project',
         run: publish
     });
@@ -165,7 +191,7 @@ export const LevelEditor = new View<LevelEditorState, { code?: string }>((ctx, s
     const overlayButtons = document.createElement('div');
     overlayButtons.className = 'widget-btns';
     overlayButtons.appendChild(btn('Exit', exit));
-    overlayButtons.appendChild(btn('New', newProject));
+    overlayButtons.appendChild(btn('Projects', projects));
     overlayButtons.appendChild(btn('Test', test));
     overlayButtons.appendChild(btn('Save', save));
     overlayButtons.appendChild(btn('Publish', publish));
@@ -179,19 +205,8 @@ export const LevelEditor = new View<LevelEditorState, { code?: string }>((ctx, s
 }, (ctx, state, mousePos) => {
 
 }, (ctx, state) => {
+    enableRendering();
     state.editor.dispose();
     body.removeChild(state.overlayEl);
+    clearInterval(state.saveInterval);
 });
-
-declare interface Level {
-    name: string,
-    center: {
-        x: number,
-        y: number
-    },
-    objects: {
-        type: 'asteroid' | 'planet',
-        x: number,
-        y: number
-    }[]
-}

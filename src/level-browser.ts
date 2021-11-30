@@ -1,4 +1,4 @@
-import { FetchLevelsResponse } from './common';
+import { FetchLevelsResponse, LevelResponse } from './common';
 import btn from './elements/create-btn';
 import genericStatus, { Status } from './elements/generic-status';
 import previewContent from './elements/preview-content';
@@ -11,6 +11,20 @@ import { mainMenu, playingGame } from './view';
 
 export interface LevelBrowserState {
     root: HTMLElement
+}
+
+export function playLevel(level: LevelResponse, whenDone: (victory: boolean) => void) {
+    const levelData = saferLevel(level.levelData, false);
+    fetch('/played-level?id='+level.id);
+
+    if(levelData) {
+        setView(playingGame, {
+            level: levelData,
+            whenDone
+        });
+    } else {
+        genericStatus(['There was an error while attempting to load the level.'], Status.ERROR);
+    }
 }
 
 export const levelBrowser = new View<LevelBrowserState>((ctx, state) => {
@@ -111,19 +125,9 @@ export const levelBrowser = new View<LevelBrowserState>((ctx, state) => {
                     const buttons = document.createElement('div');
                     buttons.className = 'widget-btns';
                     buttons.appendChild(btn('Play', () => {
-                        const levelData = saferLevel(level.levelData, false);
-                        fetch('/played-level?id='+level.id);
-
-                        if(levelData) {
-                            setView(playingGame, {
-                                level: levelData,
-                                whenDone: () => {
-                                    setView(levelBrowser, {});
-                                }
-                            });
-                        } else {
-                            genericStatus(['There was an error while attempting to load the level.'], Status.ERROR);
-                        }
+                        playLevel(level, () => {
+                            setView(levelBrowser, {});
+                        });
                     }));
                     buttons.appendChild(btn('Level info', () => {
                         setView(levelDetails, {

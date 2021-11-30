@@ -1,3 +1,7 @@
+export const loadingEl = document.getElementById('loading');
+export const body = document.getElementsByTagName('body')[0]
+body.classList.add('loaded');
+
 const moveListeners: Map<any, (newPos: Vector) => void> = new Map();
 const clickListeners: Map<any, (e: ClickEvent) => void> = new Map();
 const keybindListeners: Map<any, Keybind> = new Map();
@@ -139,15 +143,6 @@ export function removeKeyListener(identifier: any) {
     keybindListeners.delete(identifier);
 }
 
-// const simulation = new Simulation(ctx);
-
-// simulation.addBody(new Planet(500, 500));
-// simulation.addBody(new Moon(1500, 500));
-// const station = new Station(1000, 800, true, simulation);
-// simulation.addBody(station);
-// simulation.addBody(new Station(700, 250, true, simulation));
-// simulation.addBody(new Station(1200, 450, true, simulation));
-
 function paint() {
     ctx.clearRect(0, 0, innerWidth, innerHeight);
 
@@ -156,10 +151,6 @@ function paint() {
     view.paint(currentPos);
     canvas.style.cursor = cursor;
 }
-
-export const loadingEl = document.getElementById('loading');
-export const body = document.getElementsByTagName('body')[0]
-body.classList.add('loaded');
 
 updateCanvases();
 paint();
@@ -189,22 +180,6 @@ let renderer = setInterval(paint, 1e3 / 25);
 function updateCanvases() {
     canvas.width = innerWidth;
     canvas.height = innerHeight;
-    // background.width = innerWidth;
-    // background.height = innerHeight;
-    // bgCtx.imageSmoothingEnabled = false;
-    // const windowRatio = innerWidth / innerHeight;
-    // let w: number, h: number;
-    // if(bgRatio < windowRatio) {
-    //     h = innerHeight;
-    //     w = innerHeight * bgRatio;
-    // } else {
-    //     w = innerWidth;
-    //     h = innerWidth / bgRatio;
-    // }
-
-    // const dx = (BACKGROUND.width - w) / 2;
-    // const dy = (BACKGROUND.height - h) / 2;
-    // bgCtx.drawImage(BACKGROUND, dx, dy, BACKGROUND.width - dx * 2, BACKGROUND.height - dy * 2, 0, 0, innerWidth, innerHeight);
 }
 
 export const colors = {
