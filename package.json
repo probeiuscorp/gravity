@@ -22,7 +22,7 @@
     "scripts": {
         "start": "ts-node server/server.ts",
         "watch": "npx webpack-cli bundle",
-        "build": "tsc --project server/tsconfig.json"
+        "tsc": "tsc --project server/tsconfig.json"
     },
     "devDependencies": {
         "ts-node": "^10.4.0"
