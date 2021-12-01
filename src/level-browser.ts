@@ -14,11 +14,8 @@ export interface LevelBrowserState {
 }
 
 export function playLevel(level: LevelResponse, whenDone: (victory: boolean) => void) {
-    console.log('heyo');
     const output = saferLevel(level.levelData, false);
     fetch('/played-level?id='+level.id);
-
-    console.log(output);
 
     if(output.level !== false) {
         setView(playingGame, {

@@ -43,7 +43,7 @@ export class Simulation {
     public objects: VBody[] = [];
     public renderer: Renderer;
     public camera = new Vector(0, 0);
-    public zoom = 1;
+    public zoom = Math.min(Math.max(innerWidth / 1800, 0.5), 2);
     public frame: number = 0;
     private particles: Particle[] = [];
     private ctx: CanvasRenderingContext2D;

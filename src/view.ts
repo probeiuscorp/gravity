@@ -113,7 +113,7 @@ export const playingGame = new View<GameState, GameOpts>((ctx, state, opts) => {
     const level = opts.level;
     state.level = level;
 
-    simulation.camera = new Vector(-ctx.canvas.width / 2 + level.center.x, -ctx.canvas.height / 2 + level.center.y);
+    simulation.camera = new Vector((-ctx.canvas.width / 2 + level.center.x) / simulation.zoom, (-ctx.canvas.height / 2 + level.center.y) / simulation.zoom);
     state.cache = {};
     const handleContinue = () => {
         if(state.done) {
