@@ -12,7 +12,12 @@ if(mode !== 'development' && mode !== 'production') {
 import express = require('express');
 import fs = require('fs');
 import path = require('path');
-fs.mkdirSync(path.join(__dirname, 'public', 'thumbnails'));
+
+// if the directory already exists I don't care
+try {
+    fs.mkdirSync(path.join(__dirname, '..', 'public', 'thumbnails'));
+} catch(e) {}
+
 import * as typescript from 'typescript';
 import { ILevelSchema, LevelModel, onConnectionFinished } from './mongo';
 import chalk = require('chalk');
