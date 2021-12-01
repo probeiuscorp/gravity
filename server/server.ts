@@ -12,6 +12,7 @@ if(mode !== 'development' && mode !== 'production') {
 import express = require('express');
 import fs = require('fs');
 import path = require('path');
+fs.mkdirSync(path.join(__dirname, 'public', 'thumbnails'));
 import * as typescript from 'typescript';
 import { ILevelSchema, LevelModel, onConnectionFinished } from './mongo';
 import chalk = require('chalk');
