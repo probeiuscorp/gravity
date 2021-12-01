@@ -206,8 +206,7 @@ interface Level<T = any> {
     /**
      * Is guaranteed to be run after every object's \`startup\`.
      */
-    startup?: (state: T, simulation: gravity.Simulation) => void,
-    cleanup?: (state: T, simulation: gravity.Simulation) => void
+    startup?: (state: T, simulation: gravity.Simulation) => void
 }
 
 declare var Gravity: IGravity;

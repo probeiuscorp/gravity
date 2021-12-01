@@ -34,6 +34,7 @@ const whitelist = [
     'ArrayBuffer',
     'Boolean',
     'Error',
+    'DataView',
     'Date',
     'JSON',
     'Math',
@@ -41,6 +42,10 @@ const whitelist = [
     'RangeError',
     'ReferenceError',
     'SyntaxError',
+    'Float32Array',
+    'Float64Array',
+    'Int16Array',
+    'Int8Array',
     'RegExp',
     'undefined',
     'Promise'
@@ -48,7 +53,7 @@ const whitelist = [
 
 var saferCtx: any = {};
 for(const key of Object.keys(Object.getOwnPropertyDescriptors(window))) {
-    if(!(key in whitelist)) {
+    if(whitelist.findIndex(item => item === key) === -1) {
         saferCtx[key] = undefined;
     }
 }
@@ -90,10 +95,15 @@ function runFuncSafe(func: () => void, ctx: any): void {
     }
 }
 
+export interface SaferLevel {
+    level: LevelData | false,
+    onDone: () => void
+}
+
 /**
  * Rejects if the level didn't actually create one with `Gravity.createLevel()`.
  */
-export default function saferLevel(code: string, testing: boolean): LevelData | false {
+export default function saferLevel(code: string, testing: boolean): SaferLevel {
     let timeouts = {};
     let intervals = {};
     let level: LevelData;
@@ -126,7 +136,7 @@ export default function saferLevel(code: string, testing: boolean): LevelData | 
     }
 
     try {
-        (window as any).__GRAVITY.evalNoStrict(`with(ctx){(function(){${code}}).bind(ctx)()}`, {
+        (window as any).__GRAVITY.evalNoStrict(`with(ctx){(function(){'use strict';${code}}).bind(ctx)()}`, {
             ctx
         });
     } catch(e) {
@@ -138,7 +148,10 @@ export default function saferLevel(code: string, testing: boolean): LevelData | 
             console.log('error encountered:', e.name + ': ' + e.message);
             genericStatus(['Error encountered while loading level.'], Status.ERROR);
         }
-        return false;
+        return {
+            level: false,
+            onDone: () => {}
+        };
     }
     
     if(
@@ -155,12 +168,21 @@ export default function saferLevel(code: string, testing: boolean): LevelData | 
             (!item.startup || typeof item.startup === 'function')
         )) &&
         (!level.startup || typeof level.startup === 'function') &&
-        (!level.cleanup || typeof level.cleanup === 'function') &&
         (!level.tick || typeof level.tick === 'function')
     ) {
-        return level;
+        return {
+            level,
+            onDone: () => {
+                for(const key of Object.keys(intervals)) {
+                    clearInterval(key as unknown as number);
+                }
+            }
+        };
     } else {
-        genericStatus(['Level attempted to create is invalid.']);
-        return false;
+        genericStatus(['Level attempted to create is invalid.'], Status.ERROR);
+        return {
+            level: false,
+            onDone: () => {}
+        };
     }
 }

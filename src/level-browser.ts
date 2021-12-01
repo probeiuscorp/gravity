@@ -14,13 +14,19 @@ export interface LevelBrowserState {
 }
 
 export function playLevel(level: LevelResponse, whenDone: (victory: boolean) => void) {
-    const levelData = saferLevel(level.levelData, false);
+    console.log('heyo');
+    const output = saferLevel(level.levelData, false);
     fetch('/played-level?id='+level.id);
 
-    if(levelData) {
+    console.log(output);
+
+    if(output.level !== false) {
         setView(playingGame, {
-            level: levelData,
-            whenDone
+            level: output.level,
+            whenDone: (victory) => {
+                output.onDone();
+                whenDone(victory);
+            }
         });
     } else {
         genericStatus(['There was an error while attempting to load the level.'], Status.ERROR);

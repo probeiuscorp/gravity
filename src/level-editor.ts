@@ -103,10 +103,11 @@ export const LevelEditor = new View<LevelEditorState, { code?: string, project?:
             });
         }).then((code) => {
             const levelData = saferLevel(code, true);
-            if(levelData) {
+            if(levelData.level !== false) {
                 setView(playingGame, {
-                    level: levelData,
+                    level: levelData.level,
                     whenDone: () => {
+                        levelData.onDone();
                         setView(LevelEditor, {
                             code: sourceCode,
                             project: state.project

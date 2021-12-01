@@ -168,19 +168,13 @@ export const playingGame = new View<GameState, GameOpts>((ctx, state, opts) => {
                 break;
         }
         simulation.addBody(object);
-        entry.startup?.(state.cache, object as any);
-        // if(entry.aiTick) {
-        //     state.objectsWithAI.push({
-        //         object,
-        //         tick: entry.aiTick,
-        //         unbind: entry.aiUnbind
-        //     });
-        // }
+        entry.startup?.(state.cache, object);
     }
+    level.startup?.(state.cache, simulation);
     state.simulation = simulation;
     state.done = false;
 }, (ctx, mousePos, state) => {
-    state.level.tick?.(state, state.simulation);
+    state.level.tick?.(state.cache, state.simulation);
     if(!state.simulation.tick()) {
         state.done = true;
         state.continueBtn.enabled = true;

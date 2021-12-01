@@ -5,4 +5,5 @@ export const levels = [
     '3d3b2b49350dd86856dcb222', // Level 4
     'bea7d2d1493878c272e58806', // Level 5
     '0d06450d34a6439edf0ac3d7', // Level 6
+    'f81a1e6206080b9ecc644a8f', // Level 7
 ];

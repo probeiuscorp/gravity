@@ -10,6 +10,7 @@ export const enum Status {
 export default async function(text: string[], status?: Status): Promise<void> {
     return new Promise((resolve, reject) => {
         const parent = document.createElement('div');
+        parent.style.flexDirection = 'row';
         parent.className = 'widget center';
         const blockingEl = document.createElement('div');
         blockingEl.className = 'background-blocker';

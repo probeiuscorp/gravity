@@ -74,7 +74,7 @@ export const levelDetails = new View<LevelDetailsState, LevelDetailsOpts>((ctx, 
         }
     }));
     buttons.appendChild(btn('View source', () => {
-        setView(LevelEditor, { code: level.source })
+        setView(LevelEditor, { code: level.source, project: { levelData: level.source, name: '$view-source' } })
     }));
     const ratingBtn = btn('Rate', () => {
         rating(level.id).then((rated) => {
