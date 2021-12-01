@@ -45,7 +45,7 @@ if (mode !== 'development' && mode !== 'production') {
     process.exit(1);
 }
 else {
-    console.log("server running in \"" + mode + "\" mode");
+    console.log("server running in \"".concat(mode, "\" mode"));
 }
 var express = require("express");
 var fs = require("fs");
@@ -251,7 +251,7 @@ app.post('/publish-level/thumbnail', function (req, res) {
         if (Buffer.isBuffer(req.body)) {
             mongo_1.LevelModel.findOne({ private: req.query.private }).then(function (document) {
                 if (document) {
-                    document.thumbnail = "/public/thumbnails/" + document.public + ".jpg";
+                    document.thumbnail = "/public/thumbnails/".concat(document.public, ".jpg");
                     document.save().then(function () {
                         sharp(req.body)
                             .resize(250, 155, {
