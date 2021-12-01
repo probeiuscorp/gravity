@@ -16,12 +16,15 @@
         "sharp": "^0.29.3",
         "style-loader": "^3.3.1",
         "ts-loader": "^9.2.6",
-        "ts-node": "^10.4.0",
         "webpack": "^5.59.1",
         "webpack-cli": "^4.9.1"
     },
     "scripts": {
         "start": "ts-node server/server.ts",
-        "watch": "npx webpack-cli bundle"
+        "watch": "npx webpack-cli bundle",
+        "build": "tsc --project server/tsconfig.json"
+    },
+    "devDependencies": {
+        "ts-node": "^10.4.0"
     }
 }

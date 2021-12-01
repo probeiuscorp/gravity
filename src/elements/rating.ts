@@ -1,4 +1,4 @@
-import { RateLevel } from '../common';
+import { RateLevel } from '../../server/common';
 import { body } from '../main';
 import btn from './create-btn';
 import genericStatus, { Status } from './generic-status';

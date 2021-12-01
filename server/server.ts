@@ -17,7 +17,7 @@ import { ILevelSchema, LevelModel, onConnectionFinished } from './mongo';
 import chalk = require('chalk');
 import sharp = require('sharp');
 
-import type { PostLevel, RateLevel } from '../src/common';
+import type { PostLevel, RateLevel } from './common';
 import type { FilterQuery } from 'mongoose';
 import { waitForAll } from './util';
 

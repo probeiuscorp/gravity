@@ -6,7 +6,7 @@ import { mainMenu, playingGame } from './view';
 import btn from './elements/create-btn';
 import confirmExit, { ConfirmExit } from './elements/confirm-exit';
 import whileLoading from './elements/while-loading';
-import { PostLevel, PostLevelResponse } from './common';
+import { PostLevel, PostLevelResponse } from '../server/common';
 import form from './elements/form';
 import genericStatus, { Status } from './elements/generic-status';
 import saferLevel from './safer-level';

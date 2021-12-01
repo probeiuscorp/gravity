@@ -1,4 +1,4 @@
-import { FetchLevelsResponse, LevelResponse } from './common';
+import { FetchLevelsResponse, LevelResponse } from '../server/common';
 import btn from './elements/create-btn';
 import genericStatus, { Status } from './elements/generic-status';
 import previewContent from './elements/preview-content';

@@ -1,4 +1,4 @@
-import { LevelResponse } from '../common';
+import { LevelResponse } from '../../server/common';
 
 function format(s: number): string {
     if(s < 1000) {

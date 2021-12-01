@@ -7,7 +7,7 @@ import { LevelEditor } from './level-editor';
 import { levelBrowser, playLevel } from './level-browser';
 import { LevelData } from './safer-level';
 import whileLoading from './elements/while-loading';
-import { LevelResponse } from './common';
+import { LevelResponse } from '../server/common';
 
 interface MainMenuState {
     levelBtn: Button,

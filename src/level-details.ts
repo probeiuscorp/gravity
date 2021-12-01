@@ -1,8 +1,8 @@
-import { LevelResponse } from './common';
+import { LevelResponse } from '../server/common';
 import btn from './elements/create-btn';
 import previewContent from './elements/preview-content';
 import rating from './elements/rating';
-import { levelBrowser } from './level-browser';
+import { levelBrowser, playLevel } from './level-browser';
 import { LevelEditor } from './level-editor';
 import { body, canvas, disableRendering, enableRendering, setView } from './main';
 import { View } from './menu';
@@ -61,17 +61,9 @@ export const levelDetails = new View<LevelDetailsState, LevelDetailsOpts>((ctx, 
     const buttons = document.createElement('div');
     buttons.className = 'widget-btns';
     buttons.appendChild(btn('Play', () => {
-        const lvl = saferLevel(level.levelData, false);
-        fetch('/played-level?id='+level.id);
-        
-        if(lvl) {
-            setView(playingGame, {
-                level: lvl,
-                whenDone: () => {
-                    setView(levelDetails, { level: level });
-                }
-            });
-        }
+        playLevel(level, () => {
+            setView(levelDetails, { level: level });
+        })
     }));
     buttons.appendChild(btn('View source', () => {
         setView(LevelEditor, { code: level.source, project: { levelData: level.source, name: '$view-source' } })
