@@ -23,6 +23,7 @@
     "scripts": {
         "start": "ts-node server/server.ts",
         "watch": "npx webpack-cli bundle",
+        "build": "npx webpack-cli bundle --no-watch && cp server/index.html built && tsc --project server/tsconfig.json",
         "tsc": "cp server/index.html built && tsc --project server/tsconfig.json"
     },
     "devDependencies": {
