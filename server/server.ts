@@ -366,3 +366,5 @@ app.get('/played-level', (req, res) => {
         res.sendStatus(400);
     }
 });
+
+module.exports = app;
