@@ -15,7 +15,8 @@ connect(process.env.MONGODB_URI, {
 }).then(() => {
     console.log(chalk.greenBright(CHECK + ' mongo connected succesfully'));
     connectionCallbacks.forEach((callback) => void callback(true));
-}).catch(() => {
+}).catch((e) => {
+    console.log(e);
     connectionCallbacks.forEach((callback) => void callback(false));
 });
 

@@ -23,7 +23,7 @@
     "scripts": {
         "start": "ts-node api/server.ts",
         "watch": "npx webpack-cli bundle",
-        "build": "npx webpack-cli bundle --no-watch && cp -r node_modules/bootstrap-icons public && tsc --project api/tsconfig.json",
+        "build": "npx webpack-cli bundle --no-watch && cp -r node_modules/bootstrap-icons public",
         "tsc": "cp api/page.html built && tsc --project api/tsconfig.json"
     },
     "devDependencies": {
