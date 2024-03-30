@@ -6,7 +6,7 @@ import { mainMenu, playingGame } from './view';
 import btn from './elements/create-btn';
 import confirmExit, { ConfirmExit } from './elements/confirm-exit';
 import whileLoading from './elements/while-loading';
-import { PostLevel, PostLevelResponse } from '../server/common';
+import { PostLevel, PostLevelResponse } from '../api/common';
 import form from './elements/form';
 import genericStatus, { Status } from './elements/generic-status';
 import saferLevel from './safer-level';
@@ -92,7 +92,7 @@ export const LevelEditor = new View<LevelEditorState, { code?: string, project?:
         save();
         const sourceCode = state.editor.getValue();
         whileLoading<string>((done) => {
-            fetch('/transpile', {
+            fetch('/api/transpile', {
                 method: 'POST',
                 body: JSON.stringify({ code: sourceCode }),
                 headers: {
@@ -128,7 +128,7 @@ export const LevelEditor = new View<LevelEditorState, { code?: string, project?:
         console.log(state.editor);
         form('Level name:').then(({ name, description, thumbnail }) => {
             whileLoading((done) => {
-                fetch('/publish-level', {
+                fetch('/api/publish-level', {
                     method: 'POST',
                     body: JSON.stringify({
                         name,
@@ -142,7 +142,7 @@ export const LevelEditor = new View<LevelEditorState, { code?: string, project?:
                     done();
                     if(json.error === false) {
                         if(thumbnail) {
-                            fetch('/publish-level/thumbnail?private='+json.id, {
+                            fetch('/api/publish-level/thumbnail?private='+json.id, {
                                 method: 'POST',
                                 body: thumbnail
                             }).then(() => void genericStatus(['Level published succesfully.'], Status.SUCCESS));

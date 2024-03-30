@@ -21,10 +21,10 @@
         "webpack-cli": "^4.9.1"
     },
     "scripts": {
-        "start": "ts-node server/server.ts",
+        "start": "ts-node api/server.ts",
         "watch": "npx webpack-cli bundle",
-        "build": "npx webpack-cli bundle --no-watch && mkdir -p built && cp server/index.html built && tsc --project server/tsconfig.json",
-        "tsc": "cp server/index.html built && tsc --project server/tsconfig.json"
+        "build": "npx webpack-cli bundle --no-watch && cp -r node_modules/bootstrap-icons public && tsc --project api/tsconfig.json",
+        "tsc": "cp api/page.html built && tsc --project api/tsconfig.json"
     },
     "devDependencies": {
         "ts-node": "^10.4.0"

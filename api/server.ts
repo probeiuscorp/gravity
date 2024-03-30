@@ -1,3 +1,14 @@
+import express = require('express');
+import fs = require('fs');
+import path = require('path');
+import * as typescript from 'typescript';
+import { ILevelSchema, LevelModel, onConnectionFinished } from './mongo';
+import chalk = require('chalk');
+import sharp = require('sharp');
+import type { PostLevel, RateLevel } from './common';
+import type { FilterQuery } from 'mongoose';
+import { waitForAll } from './util';
+
 export const CHECK = String.fromCharCode(0x2713);
 export const X = String.fromCharCode(0x2717);
 
@@ -9,29 +20,8 @@ if(mode !== 'development' && mode !== 'production') {
     console.log(`server running in "${mode}" mode`);
 }
 
-import express = require('express');
-import fs = require('fs');
-import path = require('path');
-
-// if the directory already exists I don't care
-try {
-    fs.mkdirSync(path.join(__dirname, '..', 'public', 'thumbnails'));
-} catch(e) {}
-
-import * as typescript from 'typescript';
-import { ILevelSchema, LevelModel, onConnectionFinished } from './mongo';
-import chalk = require('chalk');
-import sharp = require('sharp');
-
-import type { PostLevel, RateLevel } from './common';
-import type { FilterQuery } from 'mongoose';
-import { waitForAll } from './util';
-
 const app = express();
 
-app.use('/dist', express.static(path.join(__dirname, '..', 'dist')));
-app.use('/public', express.static(path.join(__dirname, '..', 'public')));
-app.use('/lib/bootstrap-icons', express.static(path.join(__dirname, '..', 'node_modules', 'bootstrap-icons')));
 app.use(express.json());
 app.use(express.raw({
     type: 'image/png',
@@ -41,12 +31,6 @@ app.use(express.raw({
     type: 'image/jpeg',
     limit: '1mb'
 }));
-
-const html = fs.readFileSync(path.join(__dirname, 'index.html')).toString();
-
-app.get('/', (req, res) => {
-    res.send(html);
-});
 
 const port = process.env.PORT;
 onConnectionFinished().then(() => {
@@ -122,7 +106,7 @@ function isValidId(id: any): id is string {
     );
 }
 
-app.post('/publish-level', (req, res) => {
+app.post('/api/publish-level', (req, res) => {
     const json = req.body as PostLevel;
     
     if(typeof json !== 'object') {
@@ -207,7 +191,7 @@ app.post('/publish-level', (req, res) => {
     });
 });
 
-app.post('/publish-level/thumbnail', (req, res) => {
+app.post('/api/publish-level/thumbnail', (req, res) => {
     if(typeof req.query.private === 'string') {
         if(Buffer.isBuffer(req.body)) {
             LevelModel.findOne({ private: req.query.private as string }).then((document) => {
@@ -244,7 +228,7 @@ app.post('/publish-level/thumbnail', (req, res) => {
     }
 });
 
-app.post('/transpile', (req, res) => {
+app.post('/api/transpile', (req, res) => {
     const body = req.body as { code: string };
     try {
         if(typeof body === 'object' && typeof body.code === 'string') {
@@ -258,7 +242,7 @@ app.post('/transpile', (req, res) => {
     }
 });
 
-app.get('/levels', (req, res) => {
+app.get('/api/levels', (req, res) => {
     if(typeof req.query.sort !== 'string') {
         res.sendStatus(400);
         return;
@@ -302,7 +286,7 @@ app.get('/levels', (req, res) => {
     });
 });
 
-app.post('/rate-level', (req, res) => {
+app.post('/api/rate-level', (req, res) => {
     const { id, rating } = req.body as RateLevel;
     if(!isValidId(id)) {
         res.sendStatus(400);
@@ -332,8 +316,7 @@ app.post('/rate-level', (req, res) => {
     });
 });
 
-app.get('/get-level', (req, res) => {
-    res.setHeader('Cache-Control', 'no-store');
+app.get('/api/get-level', (req, res) => {
     if(isValidId(req.query.id)) {
         LevelModel.findOne({ public: req.query.id }).exec((err, doc) => {
             if(err) {
@@ -349,7 +332,7 @@ app.get('/get-level', (req, res) => {
     }
 });
 
-app.get('/played-level', (req, res) => {
+app.get('/api/played-level', (req, res) => {
     if(isValidId(req.query.id)) {
         LevelModel.findOne({ public: req.query.id }).exec((err, doc) => {
             if(err) {

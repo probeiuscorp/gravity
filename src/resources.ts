@@ -18,7 +18,7 @@ function finishedLoading() {
 
 export function loadImage(url: string) {
     let img = new Image();
-    img.src = '/public/img/' + url;
+    img.src = '/img/' + url;
     total++;
     img.onload = finishedLoading;
     return img;
@@ -27,7 +27,7 @@ export function loadImage(url: string) {
 export type Sound = () => void;
 export function loadSound(url: string): Sound {
     let sound = new Audio();
-    sound.src = '/public/sound/' + url;
+    sound.src = '/sound/' + url;
     total++;
     sound.addEventListener('loadeddata', finishedLoading);
     return function() {

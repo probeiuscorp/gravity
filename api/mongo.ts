@@ -1,14 +1,15 @@
-import * as mongoose from 'mongoose';
+import { connect, connection, model, Schema } from 'mongoose';
 import chalk = require('chalk');
 import { CHECK, X } from './server';
 
 let connectionCallbacks: ((wasSuccessful: boolean) => void)[] = [];
 console.log('initiating mongo connection...');
-mongoose.connect(process.env.MONGODB_URI, {
+connect(process.env.MONGODB_URI, {
     auth: {
         username: 'gravity',
         password: process.env.DATABASE_PSWD
     },
+    dbName: 'gravity',
     w: 'majority',
     retryWrites: true
 }).then(() => {
@@ -26,7 +27,7 @@ export async function onConnectionFinished(): Promise<void> {
     });
 }
 
-mongoose.connection.on('error', () => {
+connection.on('error', () => {
     console.log(chalk.redBright(X + ' error connecting to mongo'));
 });
 
@@ -45,7 +46,7 @@ export interface ILevelSchema {
     thumbnail?: string,
     description?: string
 }
-const LevelSchema = new mongoose.Schema<ILevelSchema>({
+const LevelSchema = new Schema<ILevelSchema>({
     name: {
         type: String
     },
@@ -88,4 +89,4 @@ const LevelSchema = new mongoose.Schema<ILevelSchema>({
     }
 });
 
-export const LevelModel = mongoose.model('Level', LevelSchema, 'levels');
+export const LevelModel = model('Level', LevelSchema, 'levels');

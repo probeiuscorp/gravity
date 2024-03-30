@@ -1,6 +1,6 @@
 {
     "compilerOptions": {
-        "outDir": "../dist",
+        "outDir": "../public/dist",
         "target": "ES2018",
         "moduleResolution": "node",
         "removeComments": true,

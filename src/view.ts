@@ -7,7 +7,7 @@ import { LevelEditor } from './level-editor';
 import { levelBrowser, playLevel } from './level-browser';
 import { LevelData } from './safer-level';
 import whileLoading from './elements/while-loading';
-import { LevelResponse } from '../server/common';
+import { LevelResponse } from '../api/common';
 
 interface MainMenuState {
     levelBtn: Button,
@@ -57,7 +57,7 @@ export const selectLevel = new View<SelectLevelState>((ctx, state) => {
             currentLevel = i;
             async function advanceLevel() {
                 const level = await whileLoading<LevelResponse>(async (doneLoading) => {
-                    const resp = await fetch('/get-level?id='+levels[currentLevel]);
+                    const resp = await fetch('/api/get-level?id='+levels[currentLevel]);
                     const level = await resp.json() as LevelResponse;
                     doneLoading(level);
                 });

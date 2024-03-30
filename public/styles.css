@@ -9,7 +9,7 @@ body:not(.loaded) {
 }
 
 body.loaded {
-    background-image: url('/public/img/background.gif');
+    background-image: url('/img/background.gif');
     background-size: cover;
     background-position: center;
     image-rendering: pixelated;

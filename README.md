@@ -1,4 +1,5 @@
 # Gravity
+> I wrote this a very long time ago when I was very inexperienced.
 HTML5 game built with NodeJS, TypeScript and MongoDB.
 
 Destroy the enemy stations with long range projectiles, utilizing gravity to avoid obstacles.

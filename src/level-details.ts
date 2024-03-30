@@ -1,4 +1,4 @@
-import { LevelResponse } from '../server/common';
+import { LevelResponse } from '../api/common';
 import btn from './elements/create-btn';
 import previewContent from './elements/preview-content';
 import rating from './elements/rating';

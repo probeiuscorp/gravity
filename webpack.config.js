@@ -25,7 +25,7 @@ module.exports = {
     },
     output: {
         globalObject: 'self',
-        path: path.join(__dirname, 'dist'),
+        path: path.join(__dirname, 'public', 'dist'),
         filename: '[name].bundle.js'
     },
     resolve: {

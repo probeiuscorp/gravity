@@ -1,4 +1,4 @@
-import { FetchLevelsResponse, LevelResponse } from '../server/common';
+import { FetchLevelsResponse, LevelResponse } from '../api/common';
 import btn from './elements/create-btn';
 import genericStatus, { Status } from './elements/generic-status';
 import previewContent from './elements/preview-content';
@@ -15,7 +15,7 @@ export interface LevelBrowserState {
 
 export function playLevel(level: LevelResponse, whenDone: (victory: boolean) => void) {
     const output = saferLevel(level.levelData, false);
-    fetch('/played-level?id='+level.id);
+    fetch('/api/played-level?id='+level.id);
 
     if(output.level !== false) {
         setView(playingGame, {
@@ -86,7 +86,7 @@ export const levelBrowser = new View<LevelBrowserState>((ctx, state) => {
         if(textbox.value) {
             url.set('name', textbox.value);
         }
-        fetchLevels('/levels?' + url.toString());
+        fetchLevels('/api/levels?' + url.toString());
     });
     searchBtn.classList.add('level-browser-filter-btn');
     filter.appendChild(searchBtn);
@@ -149,7 +149,7 @@ export const levelBrowser = new View<LevelBrowserState>((ctx, state) => {
             });
         });
     }
-    fetchLevels('/levels?sort=popular');
+    fetchLevels('/api/levels?sort=popular');
     body.appendChild(root);
 }, () => {
 

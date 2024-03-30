@@ -1,4 +1,4 @@
-import { RateLevel } from '../../server/common';
+import { RateLevel } from '../../api/common';
 import { body } from '../main';
 import btn from './create-btn';
 import genericStatus, { Status } from './generic-status';
@@ -141,7 +141,7 @@ export default function(id: string): Promise<boolean> {
                 cleanup();
                 resolve(true);
                 whileLoading((doneLoading) => {
-                    fetch('/rate-level', {
+                    fetch('/api/rate-level', {
                         method: 'POST',
                         body: JSON.stringify({
                             rating: selected + 1,
